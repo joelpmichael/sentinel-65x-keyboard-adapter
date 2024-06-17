@@ -1,3 +1,3 @@
-hardware/*.zip
-hardware/*-backups/*
-hardware/production/*
+hardware/*/*.zip
+hardware/*/*-backups/*
+hardware/*/production/*
