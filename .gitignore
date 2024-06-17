@@ -1,3 +1,7 @@
 hardware/*/*.zip
 hardware/*/*-backups/*
 hardware/*/production/*
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
