@@ -1,2 +1,5 @@
 [toolchain]
-channel = "nightly"
+targets = ["riscv32imac-unknown-none-elf"]
+channel = "nightly-2024-06-12"             # works
+#channel = "nightly-2024-06-13"             # broken
+#channel = "nightly"                        # broken 2024-06-18
