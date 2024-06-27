@@ -84,7 +84,7 @@ High byte \[15:8] is similar to the PS/2 Keyboard Scan Code Set 1 single-byte co
 1. Set up interrupt for rising edge on LATCH line
     1. Load keyboard current state into Keyboard State Register
 1. Set up interrupt for rising edge on CLOCK line
-    1. If state register `&` `0x8000`, then set DATA line high, else set DATA line low
+    1. If state register `&` `0x8000` `==` `0x0000`, then set DATA line high, else set DATA line low. The data line logic level is inverted from the bit value.
     1. `Left-shift` state register by `1` bit
     1. State register `|=` `1`
 1. Wait for interrupts

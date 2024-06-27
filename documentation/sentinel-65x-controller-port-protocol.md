@@ -30,9 +30,9 @@ To support slow or complex controller port devices, clock rate is limited to a m
 
 ### Data
 
-* **TO-DO:** Verify logic-high and logic-low maps to 0 and 1, <https://www.nesdev.org/wiki/Controller_port_pinout> suggests they are inverted: `The signal read by the CPU is logically inverted from the signal input on the D0-4 lines. A low voltage on D0 will be read as a 1 bit from $4016/4017.`
+* **TO-DO:** Verify logic-high and logic-low maps to 0 and 1 respectively, <https://www.nesdev.org/wiki/Controller_port_pinout> suggests they are inverted: `The signal read by the CPU is logically inverted from the signal input on the D0-4 lines. A low voltage on D0 will be read as a 1 bit from $4016/4017.`
 
-The `DATA0` and `DATA1` lines are 3.3V CMOS logic level. When the Sentinel 65X samples the `DATA0` and `DATA1` lines after the falling edge of `CLOCK`, logic high will be interpreted as a 1 bit, logic low will be interpreted as a 0 bit.
+The `DATA0` and `DATA1` lines are 3.3V CMOS logic level. When the Sentinel 65X samples the `DATA0` and `DATA1` lines after the falling edge of `CLOCK`, logic high will be interpreted as a 0 bit, logic low will be interpreted as a 1 bit.
 
 ### Waveform view
 
@@ -73,7 +73,7 @@ The low 4 bits of the second byte contains the device signature, which identifie
 1. Set bit counter to `0`
 1. Start a 100kHz clock that drives the `CLOCK` line, starting logic-low
 1. Wait for falling edge on `CLOCK` line
-1. Sample `DATA0` and `DATA1` lines - logic high translates to a 1 bit, logic low translates to a 0 bit.
+1. Sample `DATA0` and `DATA1` lines - logic high translates to a 0 bit, logic low translates to a 1 bit.
 1. Controller Port State Registers `|=` `DATA0` and `DATA1` lines logic level
 1. Increment bit counter
 1. When bit counter `==` `16`, check low 4 LSBs of the Controller Port State Registers to determine type of device connected to controller port
