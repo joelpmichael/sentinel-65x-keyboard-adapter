@@ -17,6 +17,7 @@ The controller port wire protocol of the Sentinel 65X is very similar to the SNE
 ### Clock
 
 * **TO-DO:** Verify that a 100kHz clock will work with an ATMEGA328-based Arduino as a typical "slow" controller port device
+* **TO-DO:** Verify that a 100kHz clock will work with the official SNES mouse (and clones)
 
 To support slow or complex controller port devices, clock rate is limited to a maximum of 100kHz. At least 16 clock cycles of low-to-high-to-low will be sent at the clock frequency after each `LATCH` 
 
