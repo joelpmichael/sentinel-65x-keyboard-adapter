@@ -1,5 +1,15 @@
 # Sentinel 65X Controller Port Protocol
 
+## Physical Connection
+
+The Sentinel 65X uses a Super Nintendo Entertainment System (SNES) controller port, as used on the Super Nintendo Entertainment System(R) and Super Famicom(R) home entertainment systems. Socket connectors are generally available for purchase from specialist retro console repair suppliers, or AliExpress et al. Plug connectors are almost always available only as part of a cable assembly from the same suppliers as sockets - if you happen to find a reliable source of PCB-mount SNES plugs, please let us know!
+
+## Electrical Signals
+
+All electrical signals on the controller ports are similar to the SNES signals. The Sentinel 65X exclusively uses 3.3V CMOS logic levels, and contains signal voltage level shifters based on the popular [MOSFET level shifter](https://www.digikey.com/en/blog/logic-level-shifting-basics) design. Due to the level shifter, high-speed signals above 1MHz may not have adequate rise and fall times to swing the full 5V before the next state transition. The Sentinel 65X also provides a 5V power supply to the controller port.
+
+Pins 5 and 6 (Data2 and IOBit) are not connected, as it is very uncommon to find controller plug cable assemblies with these wires. Details of the controller port pinout can be found at <https://wiki.superfamicom.org/schematics-ports-and-pinouts>
+
 ## Controller Port Wire Protocol
 
 The controller port wire protocol of the Sentinel 65X is very similar to the SNES controller protocol (ref: <https://gamesx.com/controldata/snesdat.htm>)
@@ -20,6 +30,8 @@ To support slow or complex controller port devices, clock rate is limited to a m
 
 ### Latch
 
+* **TO-DO:** Verify that a 1uS latch pulse will work through the level shifter
+
 **Rising Edge:** Signal for the controller port device to start loading the output into the controller port device's Controller Port State Register. The rising edge of `LATCH` will be sent by the Sentinel 65X as soon as possible after the falling edge of `CLOCK` to give the controller port device as much time as possible to load the next data bits into the controller port device's Controller Port State Register.
 
 **High:** The controller port device loads the next data bits into its Controller Port State Register. `LATCH` will be held high by the Sentinel 65X for a minimum of 1uS.
@@ -32,7 +44,7 @@ To support slow or complex controller port devices, clock rate is limited to a m
 
 * **TO-DO:** Verify logic-high and logic-low maps to 0 and 1 respectively, <https://www.nesdev.org/wiki/Controller_port_pinout> suggests they are inverted: `The signal read by the CPU is logically inverted from the signal input on the D0-4 lines. A low voltage on D0 will be read as a 1 bit from $4016/4017.`
 
-The `DATA0` and `DATA1` lines are 3.3V CMOS logic level. When the Sentinel 65X samples the `DATA0` and `DATA1` lines after the falling edge of `CLOCK`, logic high will be interpreted as a 0 bit, logic low will be interpreted as a 1 bit.
+The `DATA0` and `DATA1` lines are 3.3V CMOS logic level after applying level shifting. When the Sentinel 65X samples the `DATA0` and `DATA1` lines after the falling edge of `CLOCK`, logic high will be interpreted as a 0 bit, logic low will be interpreted as a 1 bit.
 
 ### Waveform view
 
@@ -59,12 +71,31 @@ The low 4 bits of the second byte contains the device signature, which identifie
 |0b0000|[SNES Controller](https://www.nesdev.org/wiki/SNES_controller)||
 |0b0001|[SNES Mouse](https://www.nesdev.org/wiki/Super_NES_Mouse)|16 bits extra data|
 |0b0010|[Sentinel 65X Keyboard](sentinel-65x-keyboard-protocol.md)|Scan codes|
-|0b0011|[Sentinel 65X Keyboard](sentinel-65x-keyboard-protocol.md)|Error codes|
-|0b1111|Controller port device fault||
+|0b1111|[Controller port device fault](#device-fault-codes)||
 
-### Special Register Values
+## Device Fault Codes
 
-`0xFFFF` Controller Port State Register is unset, do not process this data. Controller port device may be unplugged, powered off, has underflowed its controller port state register, or has otherwise failed.
+Dedicated Sentinel 65X controller port devices should support the following extended device fault codes.
+
+|Bit|\[15:8]|\[7:4]|\[3:0]|
+|-|-|-|-|
+|**Description**|Controller Extended Fault Code|0b0000|0b1111|
+||Mouse Extended Fault Code|0b0001|0b1111|
+||[Keyboard Extended Fault Code](sentinel-65x-keyboard-protocol.md#keyboard-fault-codes)|0b0010|0b1111|
+||[Generic Extended Fault Code](#generic-extended-fault-codes)|0b1111|0b1111|
+
+## Generic Extended Fault Codes
+
+Where a more specific fault code is not available, a controller port device may use the following generic device fault codes.
+
+|Code|Description|
+|-|-|
+|0x01|Device input transient error.|
+|0x02|Device output transient error.|
+|0x03|Device processing transient error.|
+|0xFD|Device runtime failure. Controller port device can't continue processing, and is no longer usable. Device will likely recover if power cycled. This fault code repeats indefinitely until the controller port device is power cycled.|
+|0xFE|Device POST error. Controller port device has failed its power-on self-test, and is not usable. Device may recover if power cycled. This fault code repeats indefinitely until the controller port device is power cycled.|
+|0xFF|Controller port device may have underflowed its controller port state register, or has otherwise failed in a way that has latched `DATA` electrically low.|
 
 ## Sentinel 65X controller port read algorithm
 
@@ -82,3 +113,7 @@ The low 4 bits of the second byte contains the device signature, which identifie
 1. Repeat steps 1 to 3
 1. Stop the clock and process the memory copy of the controller port state registers (i.e. draw the rest of the owl)
 1. Continue from step 4
+
+## Acknowledgements
+
+Nintendo, Super Nintendo Entertainment System and Super Famicom are registered trade marks of Nintendo Co., Ltd. (任天堂株式会社) in Japan and/or other countries.

@@ -48,7 +48,7 @@ Alternatively, keyboards may process lock scan codes internally and map to modif
 
 ### Signature - Low byte \[3:0]
 
-Set to `0b0010` on scan code, set to `0b0011` on error codes.
+Always set to `0b0010` on scan code.
 
 ### Modifier Keys - Low Byte \[7:4]
 
@@ -72,13 +72,15 @@ High byte \[15:8] is similar to the PS/2 Keyboard Scan Code Set 1 single-byte co
 
 `0x0002` No keys pressed (Mode 0 and 1) or no key state change (Mode 2 and 3)
 
-`0x0103` Keyboard rollover error: too many simultaneous keys pressed, some key-down events may be lost.
+## Keyboard Fault Codes
 
-`0x0203` Keyboard POST error: keyboard has failed and is unusable. Scan code will be repeated continuously until keyboard is power-cycled and successfully starts.
+Sentinel 65X keyboard adapters always support the controller port [extended fault code specification](sentinel-65x-controller-port-protocol.md#device-fault-codes) by setting the low byte \[7:0] to `0x2F`. The following high bytes \[15:8] are defined for keyboard errors:
 
-`0x0303` Keyboard error: undefined error, some scan codes may be lost.
+|Byte|Error|
+|-|-|
+|0x01|Keyboard rollover error: too many simultaneous keys pressed, some key-down events may be lost.|
 
-## Keyboard controller algorithm
+## Keyboard Controller Algorithm
 
 1. Set Keyboard State Register to `0xFFFF`
 1. Set up interrupt for rising edge on LATCH line
