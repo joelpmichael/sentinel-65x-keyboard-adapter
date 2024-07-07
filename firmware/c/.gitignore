@@ -1,1 +1,4 @@
 /obj/
+!/obj/makefile
+!/obj/*.mk
+!/obj/**/*.mk

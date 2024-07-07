@@ -6,17 +6,44 @@
 C_SRCS += \
 ../User/ch32v20x_it.c \
 ../User/main.c \
-../User/system_ch32v20x.c 
+../User/s65x_controller.c \
+../User/s65x_controller_keyboard.c \
+../User/s65x_controller_mouse.c \
+../User/s65x_controller_pad.c \
+../User/system_ch32v20x.c \
+../User/usb_device.c \
+../User/usb_device_cdc-acm.c \
+../User/usb_host.c \
+../User/usb_host_keyboard.c \
+../User/usb_host_mouse.c 
 
 OBJS += \
 ./User/ch32v20x_it.o \
 ./User/main.o \
-./User/system_ch32v20x.o 
+./User/s65x_controller.o \
+./User/s65x_controller_keyboard.o \
+./User/s65x_controller_mouse.o \
+./User/s65x_controller_pad.o \
+./User/system_ch32v20x.o \
+./User/usb_device.o \
+./User/usb_device_cdc-acm.o \
+./User/usb_host.o \
+./User/usb_host_keyboard.o \
+./User/usb_host_mouse.o 
 
 C_DEPS += \
 ./User/ch32v20x_it.d \
 ./User/main.d \
-./User/system_ch32v20x.d 
+./User/s65x_controller.d \
+./User/s65x_controller_keyboard.d \
+./User/s65x_controller_mouse.d \
+./User/s65x_controller_pad.d \
+./User/system_ch32v20x.d \
+./User/usb_device.d \
+./User/usb_device_cdc-acm.d \
+./User/usb_host.d \
+./User/usb_host_keyboard.d \
+./User/usb_host_mouse.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
