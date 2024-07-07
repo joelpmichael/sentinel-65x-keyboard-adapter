@@ -35,47 +35,47 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 SECONDARY_FLASH += \
-CH32V203-FreeRTOS.hex \
+sentinel-65x-keyboard-adapter.hex \
 
 SECONDARY_LIST += \
-CH32V203-FreeRTOS.lst \
+sentinel-65x-keyboard-adapter.lst \
 
 SECONDARY_SIZE += \
-CH32V203-FreeRTOS.siz \
+sentinel-65x-keyboard-adapter.siz \
 
 
 # All Target
-all: CH32V203-FreeRTOS.elf secondary-outputs
+all: sentinel-65x-keyboard-adapter.elf secondary-outputs
 
 # Tool invocations
-CH32V203-FreeRTOS.elf: $(OBJS) $(USER_OBJS)
+sentinel-65x-keyboard-adapter.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU RISC-V Cross C Linker'
-	riscv-none-embed-gcc -march=rv32imac -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused  -g -T "/home/joel/mrs_community-workspace/CH32V203-FreeRTOS/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"CH32V203-FreeRTOS.map" --specs=nano.specs --specs=nosys.specs -o "CH32V203-FreeRTOS.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	riscv-none-embed-gcc -march=rv32imac -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused  -g -T "/home/joel/code/sentinel-65x-keyboard-adapter/firmware/c/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"sentinel-65x-keyboard-adapter.map" --specs=nano.specs --specs=nosys.specs -o "sentinel-65x-keyboard-adapter.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-CH32V203-FreeRTOS.hex: CH32V203-FreeRTOS.elf
+sentinel-65x-keyboard-adapter.hex: sentinel-65x-keyboard-adapter.elf
 	@echo 'Invoking: GNU RISC-V Cross Create Flash Image'
-	riscv-none-embed-objcopy -O ihex "CH32V203-FreeRTOS.elf"  "CH32V203-FreeRTOS.hex"
+	riscv-none-embed-objcopy -O ihex "sentinel-65x-keyboard-adapter.elf"  "sentinel-65x-keyboard-adapter.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-CH32V203-FreeRTOS.lst: CH32V203-FreeRTOS.elf
+sentinel-65x-keyboard-adapter.lst: sentinel-65x-keyboard-adapter.elf
 	@echo 'Invoking: GNU RISC-V Cross Create Listing'
-	riscv-none-embed-objdump --all-headers --demangle --disassemble "CH32V203-FreeRTOS.elf" > "CH32V203-FreeRTOS.lst"
+	riscv-none-embed-objdump --all-headers --demangle --disassemble "sentinel-65x-keyboard-adapter.elf" > "sentinel-65x-keyboard-adapter.lst"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-CH32V203-FreeRTOS.siz: CH32V203-FreeRTOS.elf
+sentinel-65x-keyboard-adapter.siz: sentinel-65x-keyboard-adapter.elf
 	@echo 'Invoking: GNU RISC-V Cross Print Size'
-	riscv-none-embed-size --format=berkeley "CH32V203-FreeRTOS.elf"
+	riscv-none-embed-size --format=berkeley "sentinel-65x-keyboard-adapter.elf"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS) CH32V203-FreeRTOS.elf
+	-$(RM) $(OBJS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS) sentinel-65x-keyboard-adapter.elf
 	-@echo ' '
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
