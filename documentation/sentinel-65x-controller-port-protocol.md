@@ -8,6 +8,8 @@ The Sentinel 65X uses a Super Nintendo Entertainment System (SNES) controller po
 
 All electrical signals on the controller ports are similar to the SNES signals. The Sentinel 65X exclusively uses 3.3V CMOS logic levels, and contains signal voltage level shifters based on the popular [MOSFET level shifter](https://www.digikey.com/en/blog/logic-level-shifting-basics) design. Due to the level shifter, high-speed signals above 1MHz may not have adequate rise and fall times to swing the full 5V before the next state transition. The Sentinel 65X also provides a 5V power supply to the controller port.
 
+**IMPORTANT NOTE FOR SENTINEL 65X PROTOTYPE 4 OWNERS:** Prototopye 4 uses 3.3V on the SNES controller port, and was changed in Prototype 4.1 to use 5V. If you own a first-release Prototype 4 board, you may want to modify the board to insert level shifters into the `CLOCK`, `LATCH`, and `DATA` lines and run a bodge-wire to provide 5V power from the 5V regulator.
+
 Pins 5 and 6 (Data2 and IOBit) are not connected, as it is very uncommon to find controller plug cable assemblies with these wires. Details of the controller port pinout can be found at <https://wiki.superfamicom.org/schematics-ports-and-pinouts>
 
 ## Controller Port Wire Protocol
