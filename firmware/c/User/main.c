@@ -6,89 +6,40 @@
  * Description        : Main program body.
  *********************************************************************************
  * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * Attention: This software (modified or not) and binary are used for 
+ * Attention: This software (modified or not) and binary are used for
  * microcontroller manufactured by Nanjing Qinheng Microelectronics.
- *******************************************************************************/
+ ******************************************************************************
+ * Modified by Joel Michael <joelpmichael@gmail.com> for the
+ * Sentinel 65X keyboard adapter project. See LICENSE.md in the top-level
+ * project directory.
+ ******************************************************************************/
 
 /*
  *@Note
- *task1 and task2 alternate printing
+ *
+ * Pre- main() code runs from startup_ch32v20x_D8.S!
+ *
+ * Vector table offset 0 is the CPU entry point, which jumps to ASM function
+ * handle_reset(). handle_reset() calls SystemInit() from system_ch32v20x.c,
+ * then returns from the exception handler to main().
+ *
  */
 
-#include "debug.h"
+#include "ch32v20x_conf.h"
+
+#include "ps2_controller.h"
+#include "s65x_controller.h"
+#include "usb_device.h"
+#include "usb_host.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
-/* Global define */
-#define TASK1_TASK_PRIO     5
-#define TASK1_STK_SIZE      256
-#define TASK2_TASK_PRIO     5
-#define TASK2_STK_SIZE      256
-
-/* Global Variable */
-TaskHandle_t Task1Task_Handler;
-TaskHandle_t Task2Task_Handler;
-
-
-/*********************************************************************
- * @fn      GPIO_Toggle_INIT
- *
- * @brief   Initializes GPIOA.0/1
- *
- * @return  none
- */
-void GPIO_Toggle_INIT(void)
-{
-  GPIO_InitTypeDef  GPIO_InitStructure={0};
-
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-}
-
-
-/*********************************************************************
- * @fn      task1_task
- *
- * @brief   task1 program.
- *
- * @param  *pvParameters - Parameters point of task1
- *
- * @return  none
- */
-void task1_task(void *pvParameters)
-{
-    while(1)
-    {
-        printf("task1 entry\r\n");
-        GPIO_SetBits(GPIOA, GPIO_Pin_0);
-        vTaskDelay(250);
-        GPIO_ResetBits(GPIOA, GPIO_Pin_0);
-        vTaskDelay(250);
-    }
-}
-
-/*********************************************************************
- * @fn      task2_task
- *
- * @brief   task2 program.
- *
- * @param  *pvParameters - Parameters point of task2
- *
- * @return  none
- */
-void task2_task(void *pvParameters)
-{
-    while(1)
-    {
-        printf("task2 entry\r\n");
-        GPIO_ResetBits(GPIOA, GPIO_Pin_1);
-        vTaskDelay(500);
-        GPIO_SetBits(GPIOA, GPIO_Pin_1);
-        vTaskDelay(500);
-    }
+void gpio_clock_init(void) {
+    // only init clocks; individual GPIOs are configured elsewhere
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 }
 
 /*********************************************************************
@@ -98,36 +49,31 @@ void task2_task(void *pvParameters)
  *
  * @return  none
  */
-int main(void)
-{
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+int main(void) {
+    // Clock setup
+
+    // core clock is already set during pre-main() code
+    // SystemCoreClockUpdate() updates a variable used throughout the SDK
     SystemCoreClockUpdate();
-    Delay_Init();
-    USART_Printf_Init(115200);
-    printf("SystemClk:%d\r\n",SystemCoreClock);
-    printf( "ChipID:%08x\r\n", DBGMCU_GetCHIPID() );
-    printf("FreeRTOS Kernel Version:%s\r\n",tskKERNEL_VERSION_NUMBER);
 
-    GPIO_Toggle_INIT();
-    /* create two task */
-    xTaskCreate((TaskFunction_t )task2_task,
-                        (const char*    )"task2",
-                        (uint16_t       )TASK2_STK_SIZE,
-                        (void*          )NULL,
-                        (UBaseType_t    )TASK2_TASK_PRIO,
-                        (TaskHandle_t*  )&Task2Task_Handler);
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
-    xTaskCreate((TaskFunction_t )task1_task,
-                    (const char*    )"task1",
-                    (uint16_t       )TASK1_STK_SIZE,
-                    (void*          )NULL,
-                    (UBaseType_t    )TASK1_TASK_PRIO,
-                    (TaskHandle_t*  )&Task1Task_Handler);
+    // peripheral initial setup
+    gpio_clock_init();
+    if (s65x_controller_init() == false)
+        s65x_controller_post_fail();
+    if (ps2_controller_init() == false)
+        s65x_controller_post_fail();
+    if (usb_device_init() == false)
+        s65x_controller_post_fail();
+    if (usb_host_init() == false)
+        s65x_controller_post_fail();
+
+    // Delay_Init();
+
     vTaskStartScheduler();
 
-    while(1)
-    {
+    while (1) {
         printf("shouldn't run at here!!\n");
     }
 }
-

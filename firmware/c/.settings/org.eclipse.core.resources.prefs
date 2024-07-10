@@ -1,4 +1,11 @@
 eclipse.preferences.version=1
+encoding//User/main.c=GBK
+encoding//User/ps2_controller.c=GBK
+encoding//User/ps2_controller.h=GBK
+encoding//User/ps2_controller_keyboard.c=GBK
+encoding//User/ps2_controller_keyboard.h=GBK
+encoding//User/ps2_controller_mouse.c=GBK
+encoding//User/ps2_controller_mouse.h=GBK
 encoding//User/s65x_controller.c=GBK
 encoding//User/s65x_controller.h=GBK
 encoding//User/s65x_controller_keyboard.c=GBK

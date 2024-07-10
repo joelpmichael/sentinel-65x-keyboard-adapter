@@ -6,6 +6,9 @@
 C_SRCS += \
 ../User/ch32v20x_it.c \
 ../User/main.c \
+../User/ps2_controller.c \
+../User/ps2_controller_keyboard.c \
+../User/ps2_controller_mouse.c \
 ../User/s65x_controller.c \
 ../User/s65x_controller_keyboard.c \
 ../User/s65x_controller_mouse.c \
@@ -20,6 +23,9 @@ C_SRCS += \
 OBJS += \
 ./User/ch32v20x_it.o \
 ./User/main.o \
+./User/ps2_controller.o \
+./User/ps2_controller_keyboard.o \
+./User/ps2_controller_mouse.o \
 ./User/s65x_controller.o \
 ./User/s65x_controller_keyboard.o \
 ./User/s65x_controller_mouse.o \
@@ -34,6 +40,9 @@ OBJS += \
 C_DEPS += \
 ./User/ch32v20x_it.d \
 ./User/main.d \
+./User/ps2_controller.d \
+./User/ps2_controller_keyboard.d \
+./User/ps2_controller_mouse.d \
 ./User/s65x_controller.d \
 ./User/s65x_controller_keyboard.d \
 ./User/s65x_controller_mouse.d \
