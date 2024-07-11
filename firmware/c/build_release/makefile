@@ -8,12 +8,36 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include obj/User/subdir.mk
+-include obj/Startup/subdir.mk
+-include obj/Peripheral/src/subdir.mk
+-include obj/FreeRTOS/portable/MemMang/subdir.mk
+-include obj/FreeRTOS/portable/GCC/RISC-V/subdir.mk
+-include obj/FreeRTOS/subdir.mk
+-include obj/Debug/subdir.mk
+-include obj/Core/subdir.mk
+-include obj/subdir.mk
 -include User/subdir.mk
 -include Startup/subdir.mk
+-include Release/User/subdir.mk
+-include Release/Startup/subdir.mk
+-include Release/Peripheral/src/subdir.mk
+-include Release/FreeRTOS/portable/MemMang/subdir.mk
+-include Release/FreeRTOS/portable/GCC/RISC-V/subdir.mk
+-include Release/FreeRTOS/subdir.mk
+-include Release/Core/subdir.mk
+-include Release/subdir.mk
 -include Peripheral/src/subdir.mk
 -include FreeRTOS/portable/MemMang/subdir.mk
 -include FreeRTOS/portable/GCC/RISC-V/subdir.mk
 -include FreeRTOS/subdir.mk
+-include Debug/User/subdir.mk
+-include Debug/Startup/subdir.mk
+-include Debug/Peripheral/src/subdir.mk
+-include Debug/FreeRTOS/portable/MemMang/subdir.mk
+-include Debug/FreeRTOS/portable/GCC/RISC-V/subdir.mk
+-include Debug/FreeRTOS/subdir.mk
+-include Debug/Core/subdir.mk
 -include Debug/subdir.mk
 -include Core/subdir.mk
 -include subdir.mk
@@ -51,25 +75,25 @@ all: sentinel-65x-keyboard-adapter.elf secondary-outputs
 sentinel-65x-keyboard-adapter.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU RISC-V Cross C Linker'
-	riscv-none-embed-gcc -march=rv32imac -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused  -g -T "/home/joel/code/sentinel-65x-keyboard-adapter/firmware/c/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"sentinel-65x-keyboard-adapter.map" --specs=nano.specs --specs=nosys.specs -o "sentinel-65x-keyboard-adapter.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	riscv-none-elf-gcc -march=rv32imac -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Os -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -flto -Wunused -Wuninitialized -Wall -Wextra  -g3 -T "/home/joel/code/sentinel-65x-keyboard-adapter/firmware/c/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"sentinel-65x-keyboard-adapter.map" --specs=nano.specs --specs=nosys.specs -o "sentinel-65x-keyboard-adapter.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 sentinel-65x-keyboard-adapter.hex: sentinel-65x-keyboard-adapter.elf
 	@echo 'Invoking: GNU RISC-V Cross Create Flash Image'
-	riscv-none-embed-objcopy -O ihex "sentinel-65x-keyboard-adapter.elf"  "sentinel-65x-keyboard-adapter.hex"
+	riscv-none-elf-objcopy -O ihex "sentinel-65x-keyboard-adapter.elf"  "sentinel-65x-keyboard-adapter.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 sentinel-65x-keyboard-adapter.lst: sentinel-65x-keyboard-adapter.elf
 	@echo 'Invoking: GNU RISC-V Cross Create Listing'
-	riscv-none-embed-objdump --all-headers --demangle --disassemble "sentinel-65x-keyboard-adapter.elf" > "sentinel-65x-keyboard-adapter.lst"
+	riscv-none-elf-objdump --all-headers --demangle --disassemble "sentinel-65x-keyboard-adapter.elf" > "sentinel-65x-keyboard-adapter.lst"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 sentinel-65x-keyboard-adapter.siz: sentinel-65x-keyboard-adapter.elf
 	@echo 'Invoking: GNU RISC-V Cross Print Size'
-	riscv-none-embed-size --format=berkeley "sentinel-65x-keyboard-adapter.elf"
+	riscv-none-elf-size --format=berkeley --totals "sentinel-65x-keyboard-adapter.elf"
 	@echo 'Finished building: $@'
 	@echo ' '
 
