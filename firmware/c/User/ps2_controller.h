@@ -13,9 +13,6 @@
 #include "stddef.h"
 #include "stdint.h"
 
-#undef HAS_PS2_MOUSE
-#define HAS_PS2_KEYBOARD
-
 #ifndef HAS_PS2_MOUSE
 #ifndef HAS_PS2_KEYBOARD
 #error At least one of -DHAS_PS2_MOUSE, or -DHAS_PS2_KEYBOARD must be enabled

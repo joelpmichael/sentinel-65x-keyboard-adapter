@@ -1,4 +1,8 @@
-/obj/
-!/obj/makefile
-!/obj/*.mk
-!/obj/**/*.mk
+/build_debug/
+!/build_debug/makefile
+!/build_debug/*.mk
+!/build_debug/**/*.mk
+/build_release/
+!/build_release/makefile
+!/build_release/*.mk
+!/build_release/**/*.mk

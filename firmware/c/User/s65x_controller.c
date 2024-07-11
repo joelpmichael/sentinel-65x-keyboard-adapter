@@ -24,15 +24,29 @@ static bool s65x_controller_init_complete = false;
 
 static TaskHandle_t s65x_next_word_task_handle = NULL;
 static uint16_t s65x_next_word = 0xFFFF;
+static s65x_controller_devices_t next_device = 0;
 
 void s65x_next_word_task(void *pvParameters) {
     s65x_next_word_task_handle = xTaskGetCurrentTaskHandle();
+
+    // cycle through all controller devices until one returns data
     while (1) {
-        printf("task1 entry\r\n");
-        GPIO_SetBits(GPIOA, GPIO_Pin_0);
-        vTaskDelay(250);
-        GPIO_ResetBits(GPIOA, GPIO_Pin_0);
-        vTaskDelay(250);
+#ifdef HAS_CONTROLLER_PAD
+        if (next_device == CONTROLLER_PAD) {
+        }
+#endif
+#ifdef HAS_CONTROLLER_MOUSE
+        if (next_device == CONTROLLER_MOUSE) {
+        }
+#endif
+#ifdef HAS_CONTROLLER_KEYBOARD
+        if (next_device == CONTROLLER_KEYBOARD) {
+        }
+#endif
+        if (next_device == NUM_CONTROLLER_DEVICES) {
+            next_device = 0;
+            continue;
+        }
     }
 }
 
@@ -106,12 +120,13 @@ bool s65x_controller_init(void) {
     NVIC_EnableIRQ(EXTI0_IRQn);
     NVIC_EnableIRQ(EXTI1_IRQn);
 
-    xTaskCreate(s65x_next_word_task,
-                "s65x_next_word",
-                64,
-                NULL,
-                1,
-                NULL);
+    if (xTaskCreate(s65x_next_word_task,
+                    "s65x_next_word",
+                    64,
+                    NULL,
+                    1,
+                    NULL) != pdPASS)
+        return false;
 
     s65x_controller_init_complete = true;
     return true;

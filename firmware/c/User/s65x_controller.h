@@ -13,10 +13,6 @@
 #include "stddef.h"
 #include "stdint.h"
 
-#undef HAS_CONTROLLER_PAD
-#undef HAS_CONTROLLER_MOUSE
-#define HAS_CONTROLLER_KEYBOARD
-
 #ifndef HAS_CONTROLLER_PAD
 #ifndef HAS_CONTROLLER_MOUSE
 #ifndef HAS_CONTROLLER_KEYBOARD
@@ -25,7 +21,7 @@
 #endif
 #endif
 
-typedef enum controller_devices_e {
+typedef enum s65x_controller_devices_e {
 #ifdef HAS_CONTROLLER_PAD
     CONTROLLER_PAD,
 #endif
@@ -36,7 +32,7 @@ typedef enum controller_devices_e {
     CONTROLLER_KEYBOARD,
 #endif
     NUM_CONTROLLER_DEVICES
-} controller_devices_t;
+} s65x_controller_devices_t;
 
 bool s65x_controller_init(void);
 void s65x_controller_post_fail(void);

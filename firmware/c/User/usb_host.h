@@ -13,10 +13,6 @@
 #include "stddef.h"
 #include "stdint.h"
 
-#undef HAS_USB_PAD
-#undef HAS_USB_MOUSE
-#define HAS_USB_KEYBOARD
-
 #ifndef HAS_USB_PAD
 #ifndef HAS_USB_MOUSE
 #ifndef HAS_USB_KEYBOARD
