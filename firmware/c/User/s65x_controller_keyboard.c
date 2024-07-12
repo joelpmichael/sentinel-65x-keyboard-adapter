@@ -15,6 +15,7 @@
 #include "usb_host_keyboard.h"
 
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 
 #ifdef HAS_CONTROLLER_KEYBOARD
@@ -27,11 +28,22 @@
 #endif
 #endif
 
+#define KEYBOARD_QUEUE_LEN 16
+QueueHandle_t s65x_keyboard_output_queue = NULL;
+QueueHandle_t s65x_keyboard_input_queue = NULL;
+
+// fetch next keyboard word to be transmitted on the SNES controller port
 bool s65x_keyboard_get_next_word(uint16_t *next_word) {
-    return false;
+    uint16_t temp;
+    if (xQueueReceive(s65x_keyboard_output_queue, &temp, 0) == pdFALSE)
+        return false;
+    taskENTER_CRITICAL();
+    *next_word = temp;
+    taskEXIT_CRITICAL();
+    return true;
 }
 
-// task to retrieve the next word to be sent by the controller
+// task to retrieve the next word to be sent by the enabled controllers
 void s65x_keyboard_task(void *pvParameters) {
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -39,5 +51,21 @@ void s65x_keyboard_task(void *pvParameters) {
 }
 
 bool s65x_controller_keyboard_init(void) {
+    s65x_keyboard_input_queue = xQueueCreate(KEYBOARD_QUEUE_LEN, sizeof(uint16_t));
+    if (s65x_keyboard_input_queue == NULL)
+        return false;
+
+    s65x_keyboard_output_queue = xQueueCreate(KEYBOARD_QUEUE_LEN, sizeof(uint16_t));
+    if (s65x_keyboard_output_queue == NULL)
+        return false;
+
+    if (xTaskCreate(s65x_keyboard_task,
+                    "s65x_keyboard",
+                    64,
+                    NULL,
+                    1,
+                    NULL) != pdPASS)
+        return false;
+
     return true;
 }
