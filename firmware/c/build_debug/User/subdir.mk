@@ -5,10 +5,14 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../User/ch32v20x_it.c \
+../User/custom_host.c \
+../User/custom_keyboard.c \
+../User/custom_mouse.c \
+../User/custom_pad.c \
 ../User/main.c \
-../User/ps2_controller.c \
-../User/ps2_controller_keyboard.c \
-../User/ps2_controller_mouse.c \
+../User/ps2_host.c \
+../User/ps2_host_keyboard.c \
+../User/ps2_host_mouse.c \
 ../User/s65x_controller.c \
 ../User/s65x_controller_keyboard.c \
 ../User/s65x_controller_mouse.c \
@@ -24,10 +28,14 @@ C_SRCS += \
 
 OBJS += \
 ./User/ch32v20x_it.o \
+./User/custom_host.o \
+./User/custom_keyboard.o \
+./User/custom_mouse.o \
+./User/custom_pad.o \
 ./User/main.o \
-./User/ps2_controller.o \
-./User/ps2_controller_keyboard.o \
-./User/ps2_controller_mouse.o \
+./User/ps2_host.o \
+./User/ps2_host_keyboard.o \
+./User/ps2_host_mouse.o \
 ./User/s65x_controller.o \
 ./User/s65x_controller_keyboard.o \
 ./User/s65x_controller_mouse.o \
@@ -43,10 +51,14 @@ OBJS += \
 
 C_DEPS += \
 ./User/ch32v20x_it.d \
+./User/custom_host.d \
+./User/custom_keyboard.d \
+./User/custom_mouse.d \
+./User/custom_pad.d \
 ./User/main.d \
-./User/ps2_controller.d \
-./User/ps2_controller_keyboard.d \
-./User/ps2_controller_mouse.d \
+./User/ps2_host.d \
+./User/ps2_host_keyboard.d \
+./User/ps2_host_mouse.d \
 ./User/s65x_controller.d \
 ./User/s65x_controller_keyboard.d \
 ./User/s65x_controller_mouse.d \

@@ -5,8 +5,8 @@
  *      Author: joel
  */
 
-#ifndef USER_PS2_CONTROLLER_H_
-#define USER_PS2_CONTROLLER_H_
+#ifndef USER_PS2_HOST_H_
+#define USER_PS2_HOST_H_
 
 #include "stdatomic.h"
 #include "stdbool.h"
@@ -29,6 +29,6 @@ typedef enum ps2_devices_e {
     NUM_PS2_DEVICES
 } ps2_devices_t;
 
-bool ps2_controller_init(void);
+bool ps2_host_init(void);
 
-#endif /* USER_PS2_CONTROLLER_H_ */
+#endif /* USER_PS2_HOST_H_ */

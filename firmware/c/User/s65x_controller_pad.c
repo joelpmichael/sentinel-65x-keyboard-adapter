@@ -13,6 +13,14 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#ifdef HAS_CONTROLLER_PAD
+#ifndef HAS_USB_PAD
+#ifndef HAS_CUSTOM_PAD
+#error At least one of -DHAS_USB_PAD, or -DHAS_CUSTOM_PAD must be enabled
+#endif
+#endif
+#endif
+
 bool s65x_pad_get_next_word(uint16_t *next_word) {
     return false;
 }

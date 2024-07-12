@@ -27,7 +27,8 @@
 
 #include "ch32v20x_conf.h"
 
-#include "ps2_controller.h"
+#include "custom_host.h"
+#include "ps2_host.h"
 #include "s65x_controller.h"
 #include "usb_device.h"
 #include "usb_host.h"
@@ -62,13 +63,14 @@ int main(void) {
     gpio_clock_init();
     if (s65x_controller_init() == false)
         s65x_controller_post_fail();
-    if (ps2_controller_init() == false)
+    if (ps2_host_init() == false)
         s65x_controller_post_fail();
     if (usb_device_init() == false)
         s65x_controller_post_fail();
     if (usb_host_init() == false)
         s65x_controller_post_fail();
-
+    if (custom_host_init() == false)
+        s65x_controller_post_fail();
     // Delay_Init();
 
     vTaskStartScheduler();
