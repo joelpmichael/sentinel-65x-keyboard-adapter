@@ -13,12 +13,6 @@
 #include "stddef.h"
 #include "stdint.h"
 
-#ifndef HAS_PS2_MOUSE
-#ifndef HAS_PS2_KEYBOARD
-#error At least one of -DHAS_PS2_MOUSE, or -DHAS_PS2_KEYBOARD must be enabled
-#endif
-#endif
-
 typedef enum ps2_devices_e {
 #ifdef HAS_PS2_MOUSE
     PS2_MOUSE,

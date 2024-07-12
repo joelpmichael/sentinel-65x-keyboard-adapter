@@ -7,6 +7,8 @@
 
 #include "s65x_controller_pad.h"
 
+#include "custom_host.h"
+#include "custom_pad.h"
 #include "usb_host.h"
 #include "usb_host_pad.h"
 

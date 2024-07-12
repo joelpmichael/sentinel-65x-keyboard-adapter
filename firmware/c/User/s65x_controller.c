@@ -81,6 +81,9 @@ static volatile uint16_t s65x_current_word = 0xFFFF;
 // IRQ callback
 // called on rising edge of CLOCK
 void s65x_controller_on_clock(void) {
+    // disable interrupts, run entire IRQ handler inside a critical section
+    portENTER_CRITICAL();
+
     // transmit MSB-first
     // signal level is inverted from bit value
     if ((s65x_current_word & 0x8000) == 0)
@@ -94,13 +97,22 @@ void s65x_controller_on_clock(void) {
     // fill with 1's, if the buffer underflows it will send
     // 0xFFFF which is the UNDERFLOW error
     s65x_current_word |= 1;
+
+    // enable interrupts
+    portEXIT_CRITICAL();
 }
 
 // IRQ callback
 // called on rising edge of LATCH
 void s65x_controller_on_latch(void) {
+    // disable interrupts while setting the current word
+    portENTER_CRITICAL();
+
     // copy next word to current word
     s65x_current_word = s65x_next_word;
+
+    // enable interrupts
+    portEXIT_CRITICAL();
 
     // wake s65x_next_word_task if it's running (or hasn't been disabled)
     if (s65x_next_word_task_handle != NULL) {

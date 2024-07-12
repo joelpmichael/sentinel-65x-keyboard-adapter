@@ -6,9 +6,11 @@
  */
 
 #include "s65x_controller_keyboard.h"
-#include <ps2_host.h>
-#include <ps2_host_keyboard.h>
 
+#include "custom_host.h"
+#include "custom_keyboard.h"
+#include "ps2_host.h"
+#include "ps2_host_keyboard.h"
 #include "usb_host.h"
 #include "usb_host_keyboard.h"
 

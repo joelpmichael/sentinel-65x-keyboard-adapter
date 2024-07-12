@@ -35,6 +35,7 @@ typedef enum s65x_controller_devices_e {
 } s65x_controller_devices_t;
 
 bool s65x_controller_init(void);
-void s65x_controller_post_fail(void);
+void s65x_controller_post_fail(void) __attribute__((noreturn));
+void s65x_controller_run_fail(void) __attribute__((noreturn));
 
 #endif /* USER_S65X_CONTROLLER_H_ */

@@ -27,11 +27,13 @@
 
 #include "ch32v20x_conf.h"
 
+#include "s65x_controller.h"
+
 #include "custom_host.h"
 #include "ps2_host.h"
-#include "s65x_controller.h"
-#include "usb_device.h"
 #include "usb_host.h"
+
+#include "usb_device.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -59,23 +61,92 @@ int main(void) {
 
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
-    // peripheral initial setup
+    // shared peripheral initial setup
     gpio_clock_init();
+
+    // S65X SNES controller port setup
     if (s65x_controller_init() == false)
         s65x_controller_post_fail();
+
+        // only enable PS/2 init if a PS/2 device will be used
+#ifdef HAS_PS2_HOST
+#undef HAS_PS2_HOST
+#endif
+#ifdef HAS_PS2_KEYBOARD
+#ifndef HAS_PS2_HOST
+#define HAS_PS2_HOST
+#endif
+#endif
+#ifdef HAS_PS2_MOUSE
+#ifndef HAS_PS2_HOST
+#define HAS_PS2_HOST
+#endif
+#endif
+#ifdef HAS_PS2_HOST
+    // PS/2 host GPIO setup
     if (ps2_host_init() == false)
         s65x_controller_post_fail();
-    if (usb_device_init() == false)
-        s65x_controller_post_fail();
+#endif
+
+// only enable USB host init if a USB device will be used
+#ifdef HAS_USB_HOST
+#undef HAS_USB_HOST
+#endif
+#ifdef HAS_USB_KEYBOARD
+#ifndef HAS_USB_HOST
+#define HAS_USB_HOST
+#endif
+#endif
+#ifdef HAS_USB_MOUSE
+#ifndef HAS_USB_HOST
+#define HAS_USB_HOST
+#endif
+#endif
+#ifdef HAS_USB_PAD
+#ifndef HAS_USB_HOST
+#define HAS_USB_HOST
+#endif
+#endif
+#ifdef HAS_USB_HOST
+    // USB host controller setup
     if (usb_host_init() == false)
         s65x_controller_post_fail();
+#endif
+
+// only enable custom host init if a custom device will be used
+#ifdef HAS_CUSTOM_HOST
+#undef HAS_CUSTOM_HOST
+#endif
+#ifdef HAS_CUSTOM_KEYBOARD
+#ifndef HAS_CUSTOM_HOST
+#define HAS_CUSTOM_HOST
+#endif
+#endif
+#ifdef HAS_CUSTOM_MOUSE
+#ifndef HAS_CUSTOM_HOST
+#define HAS_CUSTOM_HOST
+#endif
+#endif
+#ifdef HAS_CUSTOM_PAD
+#ifndef HAS_CUSTOM_HOST
+#define HAS_CUSTOM_HOST
+#endif
+#endif
+#ifdef HAS_CUSTOM_HOST
+    // custom device setup
     if (custom_host_init() == false)
         s65x_controller_post_fail();
+#endif
+
+    // USB device setup for config interface
+    if (usb_device_init() == false)
+        s65x_controller_post_fail();
+
     // Delay_Init();
 
     vTaskStartScheduler();
 
     while (1) {
-        printf("shouldn't run at here!!\n");
+        s65x_controller_run_fail();
     }
 }

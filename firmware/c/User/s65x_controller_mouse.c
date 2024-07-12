@@ -6,9 +6,11 @@
  */
 
 #include "s65x_controller_mouse.h"
-#include <ps2_host.h>
-#include <ps2_host_mouse.h>
 
+#include "custom_host.h"
+#include "custom_mouse.h"
+#include "ps2_host.h"
+#include "ps2_host_mouse.h"
 #include "usb_host.h"
 #include "usb_host_mouse.h"
 
