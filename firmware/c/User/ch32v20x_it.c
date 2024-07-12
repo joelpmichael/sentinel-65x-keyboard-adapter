@@ -47,15 +47,23 @@ void HardFault_Handler(void) {
 // and EXTI[15:10] share a single IRQ line.
 // GPIO pins PA[n], PB[n], PC[n], PD[n] and PE[n] are all muxed into EXTI[n]
 #define EXTI_COUNT 16
+
 static exti_handler exti_handlers[EXTI_COUNT] = {NULL};
+
+// set EXTI handler for EXTI number
 void set_exti_handler(uint8_t exti_num, exti_handler handler) {
     if (exti_num >= EXTI_COUNT)
         return;
     exti_handlers[exti_num] = handler;
 }
+
+// clear EXTI handler for EXTI number by setting to NULL
 void clear_exti_handler(uint8_t exti_num) {
     set_exti_handler(exti_num, NULL);
 }
+
+// run EXTI handler callback if set
+// called from IRQ handler
 void run_exti_handler(uint8_t exti_num) {
     // ensure not trying to run an undefined EXTI
     if (exti_num >= EXTI_COUNT)
@@ -82,6 +90,7 @@ void run_exti_handler(uint8_t exti_num) {
  */
 void EXTI0_IRQHandler(void) {
     run_exti_handler(0);
+    NVIC_ClearPendingIRQ(EXTI0_IRQn);
 }
 
 /*********************************************************************
@@ -93,6 +102,7 @@ void EXTI0_IRQHandler(void) {
  */
 void EXTI1_IRQHandler(void) {
     run_exti_handler(1);
+    NVIC_ClearPendingIRQ(EXTI1_IRQn);
 }
 
 /*********************************************************************
@@ -104,6 +114,7 @@ void EXTI1_IRQHandler(void) {
  */
 void EXTI2_IRQHandler(void) {
     run_exti_handler(2);
+    NVIC_ClearPendingIRQ(EXTI2_IRQn);
 }
 
 /*********************************************************************
@@ -115,6 +126,7 @@ void EXTI2_IRQHandler(void) {
  */
 void EXTI3_IRQHandler(void) {
     run_exti_handler(3);
+    NVIC_ClearPendingIRQ(EXTI3_IRQn);
 }
 
 /*********************************************************************
@@ -126,6 +138,7 @@ void EXTI3_IRQHandler(void) {
  */
 void EXTI4_IRQHandler(void) {
     run_exti_handler(4);
+    NVIC_ClearPendingIRQ(EXTI4_IRQn);
 }
 
 /*********************************************************************
@@ -139,6 +152,7 @@ void EXTI9_5_IRQHandler(void) {
     for (uint8_t i = 5; i <= 9; i++) {
         run_exti_handler(i);
     }
+    NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
 }
 
 /*********************************************************************
@@ -152,4 +166,5 @@ void EXTI15_10_IRQHandler(void) {
     for (uint8_t i = 10; i <= 15; i++) {
         run_exti_handler(i);
     }
+    NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
 }

@@ -3,9 +3,6 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
-ELF_SRCS += \
-../Debug/sentinel-65x-keyboard-adapter.elf 
-
 C_SRCS += \
 ../Debug/debug.c 
 

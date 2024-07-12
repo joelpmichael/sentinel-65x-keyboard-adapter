@@ -26,3 +26,5 @@ encoding//User/usb_host_keyboard.c=GBK
 encoding//User/usb_host_keyboard.h=GBK
 encoding//User/usb_host_mouse.c=GBK
 encoding//User/usb_host_mouse.h=GBK
+encoding//User/usb_host_pad.c=GBK
+encoding//User/usb_host_pad.h=GBK
