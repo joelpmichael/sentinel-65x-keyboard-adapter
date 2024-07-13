@@ -26,13 +26,14 @@ static bool s65x_controller_init_complete = false;
 static TaskHandle_t s65x_next_word_task_handle = NULL;
 // next word to be sent, retrieved by s65x_next_word_task
 static uint16_t s65x_next_word = 0xFFFF;
-// round-robin position in enabled controller devices
-static s65x_controller_devices_t next_device = 0;
 
 // task to retrieve the next word to be sent by the controller
 void s65x_next_word_task(void *pvParameters) {
     // set task handle inside the task once task starts running
     s65x_next_word_task_handle = xTaskGetCurrentTaskHandle();
+
+    // round-robin position in enabled controller devices
+    s65x_controller_devices_t next_device = 0;
 
     // cycle through all controller devices until one returns data
     while (1) {
@@ -176,15 +177,16 @@ bool s65x_controller_init(void) {
 
     // create task to perform fetching of the next word to be sent
     // see s65x_next_word_task() for details
-    if (xTaskCreate(s65x_next_word_task,
-                    "s65x_next_word",
-                    64,
-                    NULL,
-                    1,
-                    NULL) != pdPASS)
-        return false;
+    if (s65x_next_word_task_handle == NULL)
+        if (xTaskCreate(s65x_next_word_task,
+                        "s65x_next_word",
+                        64,
+                        NULL,
+                        1,
+                        NULL) != pdPASS)
+            return false;
 
-        // init peripherals that the controller emulates
+            // init peripherals that the controller emulates
 #ifdef HAS_CONTROLLER_PAD
     if (s65x_controller_pad_init() == false)
         return false;

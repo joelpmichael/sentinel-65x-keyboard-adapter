@@ -21,6 +21,28 @@
 #endif
 #endif
 
+#define S65X_SIGNATURE_ERROR 0b1111
+
+#define S65X_ERROR_SOURCE_GENERIC 0b1111
+
+#define S65X_ERROR_GENERIC_TRANSIENT_INPUT 0x01
+#define S65X_ERROR_GENERIC_TRANSIENT_OUTPUT 0x02
+#define S65X_ERROR_GENERIC_TRANSIENT_PROCESS 0x03
+#define S65X_ERROR_GENERIC_FATAL_RUNTIME 0xFD
+#define S65X_ERROR_GENERIC_FATAL_POST 0xFE
+#define S65X_ERROR_GENERIC_UNDERFLOW 0xFF
+
+typedef struct __attribute((packed)) s65x_error_s {
+    uint8_t signature : 4;
+    uint8_t source_signature : 4;
+    uint8_t error_code : 8;
+} s65x_error_t;
+
+typedef union s65x_error_u {
+    s65x_error_t error;
+    uint16_t u16;
+} s65x_error;
+
 typedef enum s65x_controller_devices_e {
 #ifdef HAS_CONTROLLER_PAD
     CONTROLLER_PAD,

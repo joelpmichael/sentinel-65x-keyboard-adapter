@@ -79,6 +79,7 @@ Sentinel 65X keyboard adapters always support the controller port [extended faul
 |Byte|Error|
 |-|-|
 |0x01|Keyboard rollover error: too many simultaneous keys pressed, some key-down events may be lost.|
+|0x02|Keyboard buffer full: some events were lost|
 
 ## Keyboard Controller Algorithm
 
