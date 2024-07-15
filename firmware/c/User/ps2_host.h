@@ -23,6 +23,6 @@ typedef enum ps2_devices_e {
     NUM_PS2_DEVICES
 } ps2_devices_t;
 
-bool ps2_host_init(void);
+bool ps2_host_init(void) __attribute__((section(".slowfunc")));
 
 #endif /* USER_PS2_HOST_H_ */

@@ -14,15 +14,17 @@
 
 // All interrupt handler names can be found in startup_ch32v20x_*.S
 
-void NMI_Handler(void) __attribute__((interrupt()));
-void HardFault_Handler(void) __attribute__((interrupt()));
-void EXTI0_IRQHandler(void) __attribute__((interrupt()));
-void EXTI1_IRQHandler(void) __attribute__((interrupt()));
-void EXTI2_IRQHandler(void) __attribute__((interrupt()));
-void EXTI3_IRQHandler(void) __attribute__((interrupt()));
-void EXTI4_IRQHandler(void) __attribute__((interrupt()));
-void EXTI9_5_IRQHandler(void) __attribute__((interrupt()));
-void EXTI15_10_IRQHandler(void) __attribute__((interrupt()));
+void NMI_Handler(void) __attribute__((interrupt(), section(".slowfunc")));
+void HardFault_Handler(void) __attribute__((interrupt(), section(".slowfunc"), noreturn));
+void EXTI0_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void EXTI1_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void EXTI2_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void EXTI3_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void EXTI4_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void EXTI9_5_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void EXTI15_10_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+
+void run_exti_handler(uint8_t exti_num) __attribute__((hot, section(".ramfunc")));
 
 /*********************************************************************
  * @fn      NMI_Handler

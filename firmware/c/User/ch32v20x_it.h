@@ -15,7 +15,7 @@
 #include "debug.h"
 
 typedef void (*exti_handler)(void);
-void set_exti_handler(uint8_t exti_num, exti_handler handler);
-void clear_exti_handler(uint8_t exti_num);
+void set_exti_handler(uint8_t exti_num, exti_handler handler) __attribute__((section(".slowfunc")));
+void clear_exti_handler(uint8_t exti_num) __attribute__((section(".slowfunc")));
 
 #endif /* __CH32V20x_IT_H */

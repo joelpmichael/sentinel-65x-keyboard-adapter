@@ -12,6 +12,7 @@
 #include "stdbool.h"
 #include "stddef.h"
 #include "stdint.h"
+#include "stdlib.h"
 
 #ifndef HAS_CONTROLLER_PAD
 #ifndef HAS_CONTROLLER_MOUSE
@@ -56,8 +57,8 @@ typedef enum s65x_controller_devices_e {
     NUM_CONTROLLER_DEVICES
 } s65x_controller_devices_t;
 
-bool s65x_controller_init(void);
-void s65x_controller_post_fail(void) __attribute__((noreturn));
-void s65x_controller_run_fail(void) __attribute__((noreturn));
+bool s65x_controller_init(void) __attribute__((section(".slowfunc")));
+void s65x_controller_post_fail(void) __attribute__((noreturn, section(".slowfunc")));
+void s65x_controller_run_fail(void) __attribute__((noreturn, section("slowfunc")));
 
 #endif /* USER_S65X_CONTROLLER_H_ */

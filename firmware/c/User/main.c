@@ -38,6 +38,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+void gpio_clock_init(void) __attribute__((section(".slowfunc")));
 void gpio_clock_init(void) {
     // only init clocks; individual GPIOs are configured elsewhere
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
@@ -52,7 +53,7 @@ void gpio_clock_init(void) {
  *
  * @return  none
  */
-int main(void) {
+__attribute__((section(".slowfunc"))) int main(void) {
     // Clock setup
 
     // core clock is already set during pre-main() code
@@ -149,4 +150,30 @@ int main(void) {
     while (1) {
         s65x_controller_run_fail();
     }
+}
+
+// idle hook, just wait for interrupts
+void vApplicationIdleHook(void) {
+    __WFI();
+}
+
+__attribute__((section(".slowfunc"))) void vApplicationMallocFailedHook(void) {
+    s65x_controller_run_fail();
+}
+
+__attribute__((section(".slowfunc"))) void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    s65x_controller_run_fail();
+}
+
+// custom malloc/free overrides, use FreeRTOS to malloc/free
+__attribute__((section(".ramfunc"))) void free(void *ptr) {
+    if (ptr == NULL)
+        return;
+    vPortFree(ptr);
+}
+
+__attribute__((section(".ramfunc"), malloc, malloc(free))) void *malloc(size_t size) {
+    if (size == 0)
+        return NULL;
+    return pvPortMalloc(size);
 }

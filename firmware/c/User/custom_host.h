@@ -26,6 +26,6 @@ typedef enum custom_devices_e {
     NUM_CUSTOM_DEVICES
 } custom_devices_t;
 
-bool custom_host_init(void);
+bool custom_host_init(void) __attribute__((section(".slowfunc")));
 
 #endif /* USER_CUSTOM_HOST_H_ */
