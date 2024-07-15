@@ -53,7 +53,7 @@ void gpio_clock_init(void) {
  *
  * @return  none
  */
-__attribute__((section(".slowfunc"))) int main(void) {
+int main(void) {
     // Clock setup
 
     // core clock is already set during pre-main() code

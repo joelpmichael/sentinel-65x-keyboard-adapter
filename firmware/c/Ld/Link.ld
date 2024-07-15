@@ -77,8 +77,6 @@ SECTIONS
 		. = ALIGN(4);
 		*(.text)
 		*(.text.*)
-		*(.rodata)
-		*(.rodata*)
 		*(.glue_7)
 		*(.glue_7t)
 		*(.gnu.linkonce.t.*)
@@ -183,9 +181,10 @@ SECTIONS
 
 	.slow :
 	{
-		. = ALIGN(4);
 		*(.slowfunc .slowfunc.*)
         *(.slowconst .slowconst.*)
+		*(.rodata)
+		*(.rodata*)
 		. = ALIGN(4);
 	} >FLASH_SLOW AT>FLASH_SLOW 
 
