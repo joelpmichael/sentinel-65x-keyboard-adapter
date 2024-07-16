@@ -153,7 +153,7 @@ int main(void) {
 }
 
 // idle hook, just wait for interrupts
-void vApplicationIdleHook(void) {
+__attribute__((section(".ramfunc"))) inline void vApplicationIdleHook(void) {
     __WFI();
 }
 
@@ -166,13 +166,13 @@ __attribute__((section(".slowfunc"))) void vApplicationStackOverflowHook(TaskHan
 }
 
 // custom malloc/free overrides, use FreeRTOS to malloc/free
-__attribute__((section(".ramfunc"))) void free(void *ptr) {
+__attribute__((section(".ramfunc"))) inline void free(void *ptr) {
     if (ptr == NULL)
         return;
     vPortFree(ptr);
 }
 
-__attribute__((section(".ramfunc"), malloc, malloc(free))) void *malloc(size_t size) {
+__attribute__((section(".ramfunc"), malloc, malloc(free))) inline void *malloc(size_t size) {
     if (size == 0)
         return NULL;
     return pvPortMalloc(size);
