@@ -78,12 +78,6 @@ clean:
 	-$(RM) $(OBJS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS) sentinel-65x-keyboard-adapter.elf
 	-@echo ' '
 
-flash: sentinel-65x-keyboard-adapter.elf
-	@echo 'Invoking: wlink flash tool'
-	wlink flash -e --chip ch32v20x "sentinel-65x-keyboard-adapter.elf"
-	@echo 'Finished flashing: $@'
-	@echo ' '
-
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
 .PHONY: all clean dependents
