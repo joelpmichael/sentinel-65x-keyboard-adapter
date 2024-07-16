@@ -153,7 +153,7 @@ int main(void) {
 }
 
 // idle hook, just wait for interrupts
-__attribute__((section(".ramfunc"))) inline void vApplicationIdleHook(void) {
+__attribute__((section(".ramfunc"))) void vApplicationIdleHook(void) {
     __WFI();
 }
 
