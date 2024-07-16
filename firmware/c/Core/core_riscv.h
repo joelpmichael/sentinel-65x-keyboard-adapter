@@ -291,6 +291,12 @@ __attribute__( ( always_inline ) ) RV_STATIC_INLINE void __WFI(void)
   asm volatile ("wfi");
 }
 
+__attribute__( ( always_inline ) ) RV_STATIC_INLINE void __EBREAK(void)
+{
+  asm volatile ("ebreak");
+}
+
+
 /*********************************************************************
  * @fn      _SEV
  *

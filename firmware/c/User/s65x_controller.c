@@ -215,6 +215,10 @@ void s65x_controller_post_fail(void) {
         s65x_next_word_task_handle = NULL;
         // repeat the POST fail code forever
         s65x_next_word = 0xFEFF;
+#ifdef DEBUG
+        // drop to debugger in debug builds
+        __EBREAK();
+#endif
         // do nothing else until an IRQ occurs
         __WFI();
     }
@@ -227,6 +231,10 @@ void s65x_controller_run_fail(void) {
         s65x_next_word_task_handle = NULL;
         // repeat the RUN fail code forever
         s65x_next_word = 0xFDFF;
+#ifdef DEBUG
+        // drop to debugger in debug builds
+        __EBREAK();
+#endif
         // do nothing else until an IRQ occurs
         __WFI();
     }
