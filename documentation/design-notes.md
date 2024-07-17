@@ -99,7 +99,7 @@ peripheral clocks are also divided at the same time, the impact needs to be eval
 |17|PA7|(GPIO Example)|ADC_IN7, SPI1_MOSI|
 |18|PB0|SNES_CLOCK||
 |19|PB1|SNES_LATCH||
-|20|PB2|SNES_DATA (BOOT1) (External pull-down)||
+|20|PB2|SNES_DATA (BOOT1) (Internal weak pull-down)||
 |21|PB10|I2C_SCL||
 |22|PB11|I2C_SDA||
 |23|VSS_1|Power||
@@ -148,4 +148,15 @@ USB-A on PA11/12, USB-C (with 5.1k pull-downs because not doing that is just rud
 
 ### Board Boot straps
 
-Boot0 add push-button, Boot1 use external pull-down - never need to boot from SRAM.
+Use DPDT slide switch to pull Boot0 and Boot1 to desired state.
+
+|State|Boot0|Boot1|
+|-|-|-|
+|Run|Low|Float|
+|Load|High|Low|
+
+## Firmware notes
+
+### USB Host
+
+Ugh, looks like I'll need to complete most of this code in both C and Rust.
