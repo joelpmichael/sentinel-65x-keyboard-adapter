@@ -16,8 +16,8 @@ MEMORY
 /* CH32V20x_D6 - CH32V203K8-CH32V203C8-CH32V203G8-CH32V203F8 */
 /**/
     /*
-	 * !!! HERE BE DRAGONS !!!
-	 *
+     * !!! HERE BE DRAGONS !!!
+     *
      * These parts actually contain a 256K flash wafer wire-bonded to the core!
      *
      * The first 224K is in the main flash area at 0x0800_0000
@@ -31,28 +31,28 @@ MEMORY
      * This means, you must not clock the CPU at 144MHz if you want to use all
      * the available flash! Even worse, if you want to use USB as well as all
      * the flash, your CPU clock will be limited to 96MHz.
-	 *
-	 * Unfortunately, the CH32V203C8 is a lying liar that lies, and the
-	 * hacked-on OpenOCD distributed by WCH is stupid enough to believe it.
-	 * The register at 0x1ffff7e0 claims how much flash is available, but this
-	 * is how much zero-wait flash is available not the total flash size. When
-	 * OpenOCD programs the flash, it erases the ENTIRE 224K first, then only
-	 * programs up to the size that the MCU says (64K) and silently discards
-	 * everything after that.
-	 *
-	 * Even worse, the OpenOCD hacks appear to assume that the flash is only
-	 * ever located at 0x00000000. If the linker puts code at the "real"
-	 * flash address of 0x08000000 then OpenOCD won't even bother flashing
-	 * the code at all...
-	 *
-	 * The easy fix is to use a different tool to do the flashing, one that
-	 * knows that the CH32V203C8 is a lying liar that lies. Luckily, wlink is
-	 * exactly that. Grab it from https://github.com/ch32-rs/wlink
-	 *
+     *
+     * Unfortunately, the CH32V203C8 is a lying liar that lies, and the
+     * hacked-on OpenOCD distributed by WCH is stupid enough to believe it.
+     * The register at 0x1ffff7e0 claims how much flash is available, but this
+     * is how much zero-wait flash is available not the total flash size. When
+     * OpenOCD programs the flash, it erases the ENTIRE 224K first, then only
+     * programs up to the size that the MCU says (64K) and silently discards
+     * everything after that.
+     *
+     * Even worse, the OpenOCD hacks appear to assume that the flash is only
+     * ever located at 0x00000000. If the linker puts code at the "real"
+     * flash address of 0x08000000 then OpenOCD won't even bother flashing
+     * the code at all...
+     *
+     * The easy fix is to use a different tool to do the flashing, one that
+     * knows that the CH32V203C8 is a lying liar that lies. Luckily, wlink is
+     * exactly that. Grab it from https://github.com/ch32-rs/wlink
+     *
      */
 
     /* entire flash */
-	FLASH_ALL : ORIGIN = 0x08000000, LENGTH = 224K
+    FLASH_ALL : ORIGIN = 0x08000000, LENGTH = 224K
     /* zero-wait flash */
     FLASH_ZERO (rx) : ORIGIN = 0x00000000, LENGTH = 64K
     /* remainder of flash for code */
@@ -99,6 +99,8 @@ SECTIONS
         . = ALIGN(4);
         *(.text)
         *(.text.*)
+        *(.rodata)
+        *(.rodata*)
         *(.glue_7)
         *(.glue_7t)
         *(.gnu.linkonce.t.*)
@@ -219,8 +221,6 @@ SECTIONS
         . = ALIGN(4);
         *(.slowfunc .slowfunc.*)
         *(.slowconst .slowconst.*)
-        *(.rodata)
-        *(.rodata*)
         . = ALIGN(4);
     } >FLASH_SLOW
 

@@ -190,6 +190,11 @@ void s65x_keyboard_task(void *pvParameters) {
 
         // current loop data fetch state
         bool keyboard_has_data = false;
+        bool scancode_is_modifier = false;
+        bool scancode_is_lock = false;
+        bool scancode_can_capslock = false;
+        bool scancode_can_numlock = false;
+        bool scancode_can_scrlock = false;
 
         // fetch new data
         if (xQueueReceive(s65x_keyboard_input_queue, &this_state, 0) == pdTRUE)
@@ -226,6 +231,8 @@ void s65x_keyboard_task(void *pvParameters) {
             portENTER_CRITICAL();
             modifier_alt = !this_state.keyboard.key_up;
             portEXIT_CRITICAL();
+            scancode_is_modifier = true;
+            break;
         }
         case KEYBOARD_SCANCODE_RALT_ALTGR: {
             // special handling for right-alt / AltGr
@@ -234,6 +241,7 @@ void s65x_keyboard_task(void *pvParameters) {
                 modifier_altgr = !this_state.keyboard.key_up;
             } else {
                 modifier_alt = !this_state.keyboard.key_up;
+                scancode_is_modifier = true;
             }
             portEXIT_CRITICAL();
             break;
@@ -243,6 +251,7 @@ void s65x_keyboard_task(void *pvParameters) {
             portENTER_CRITICAL();
             modifier_shift = !this_state.keyboard.key_up;
             portEXIT_CRITICAL();
+            scancode_is_modifier = true;
             break;
         }
         case KEYBOARD_SCANCODE_LCTRL:
@@ -250,6 +259,7 @@ void s65x_keyboard_task(void *pvParameters) {
             portENTER_CRITICAL();
             modifier_ctrl = !this_state.keyboard.key_up;
             portEXIT_CRITICAL();
+            scancode_is_modifier = true;
             break;
         }
         case KEYBOARD_SCANCODE_LMETA:
@@ -257,6 +267,7 @@ void s65x_keyboard_task(void *pvParameters) {
             portENTER_CRITICAL();
             modifier_meta = !this_state.keyboard.key_up;
             portEXIT_CRITICAL();
+            scancode_is_modifier = true;
             break;
         }
 
@@ -272,45 +283,138 @@ void s65x_keyboard_task(void *pvParameters) {
             else if (this_state.keyboard.scan_code == KEYBOARD_SCANCODE_SCRLOCK)
                 num_lock = !this_state.keyboard.key_up;
             portEXIT_CRITICAL();
+            scancode_is_lock = true;
+
+            // update lock status on keyboard(s)
+#ifdef HAS_USB_KEYBOARD
+#endif
+#ifdef HAS_PS2_KEYBOARD
+#endif
+#ifdef HAS_CUSTOM_KEYBOARD
+#endif
+
             break;
         }
-
-        // non-repeating keys
-        case KEYBOARD_SCANCODE_PRTSCN:
-        case KEYBOARD_SCANCODE_PAUSE:
-        case KEYBOARD_SCANCODE_VOLMUTE:
-        case KEYBOARD_SCANCODE_APPS:
-        case KEYBOARD_SCANCODE_SLEEP:
-        case KEYBOARD_SCANCODE_POWER: {
-            break;
-        }
-
-        // everything else can repeat
         default: {
-            if (keyboard_autorepeat == true) {
-                if (this_state.keyboard.key_up == true && keyboard_keypress_timers[this_state.keyboard.scan_code] != NULL) {
-                    // stop and delete timer
-                    if (xTimerStop(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
-                        s65x_controller_run_fail();
-                    if (xTimerDelete(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
-                        s65x_controller_run_fail();
-                    portENTER_CRITICAL();
-                    keyboard_keypress_timers[this_state.keyboard.scan_code] = NULL;
-                    portEXIT_CRITICAL();
-                }
-                if (this_state.keyboard.key_up == false && keyboard_keypress_timers[this_state.keyboard.scan_code] == NULL) {
-                    // create and start timer
-                    portENTER_CRITICAL();
-                    keyboard_keypress_timers[this_state.keyboard.scan_code] = xTimerCreate("KB_REPEAT_T", pdMS_TO_TICKS(KEYBOARD_AUTOREPEAT_DELAY), pdTRUE, (void *)this_state.keyboard.scan_code, s65x_keyboard_autorepeat_cb);
-                    portEXIT_CRITICAL();
-                    if (keyboard_keypress_timers[this_state.keyboard.scan_code] == NULL)
-                        s65x_controller_run_fail();
-                    if (xTimerStart(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
-                        s65x_controller_run_fail();
-                }
-            }
             break;
         }
+        }
+
+        // check lock modifier if enabled
+        if (scancode_is_modifier == false && scancode_is_lock == false) {
+            switch (this_state.keyboard.scan_code) {
+            // no locks on these keys
+            case KEYBOARD_SCANCODE_ESC:
+            case KEYBOARD_SCANCODE_F1:
+            case KEYBOARD_SCANCODE_F2:
+            case KEYBOARD_SCANCODE_F3:
+            case KEYBOARD_SCANCODE_F4:
+            case KEYBOARD_SCANCODE_F5:
+            case KEYBOARD_SCANCODE_F6:
+            case KEYBOARD_SCANCODE_F7:
+            case KEYBOARD_SCANCODE_F8:
+            case KEYBOARD_SCANCODE_F9:
+            case KEYBOARD_SCANCODE_F10:
+            case KEYBOARD_SCANCODE_F11:
+            case KEYBOARD_SCANCODE_F12:
+            case KEYBOARD_SCANCODE_POWER:
+            case KEYBOARD_SCANCODE_SLEEP:
+            case KEYBOARD_SCANCODE_VOLDOWN:
+            case KEYBOARD_SCANCODE_VOLMUTE:
+            case KEYBOARD_SCANCODE_VOLUP:
+            case KEYBOARD_SCANCODE_BKSP:
+            case KEYBOARD_SCANCODE_INS:
+            case KEYBOARD_SCANCODE_HOME:
+            case KEYBOARD_SCANCODE_PGUP:
+            case KEYBOARD_SCANCODE_KPSLASH:
+            case KEYBOARD_SCANCODE_KPSTAR:
+            case KEYBOARD_SCANCODE_KPMINUS:
+            case KEYBOARD_SCANCODE_TAB:
+            case KEYBOARD_SCANCODE_DEL:
+            case KEYBOARD_SCANCODE_END:
+            case KEYBOARD_SCANCODE_PGDN:
+            case KEYBOARD_SCANCODE_KPPLUS:
+            case KEYBOARD_SCANCODE_ENTER:
+            case KEYBOARD_SCANCODE_KP5:
+            case KEYBOARD_SCANCODE_APPS:
+            case KEYBOARD_SCANCODE_UP:
+            case KEYBOARD_SCANCODE_LEFT:
+            case KEYBOARD_SCANCODE_RIGHT:
+            case KEYBOARD_SCANCODE_DOWN:
+            case KEYBOARD_SCANCODE_KPENTER: {
+                break;
+            }
+            // numlock+scrlock on these keys
+            case KEYBOARD_SCANCODE_KP7:
+            case KEYBOARD_SCANCODE_KP8:
+            case KEYBOARD_SCANCODE_KP9:
+            case KEYBOARD_SCANCODE_KP4:
+            case KEYBOARD_SCANCODE_KP6:
+            case KEYBOARD_SCANCODE_KP1:
+            case KEYBOARD_SCANCODE_KP2:
+            case KEYBOARD_SCANCODE_KP3:
+            case KEYBOARD_SCANCODE_KP0:
+            case KEYBOARD_SCANCODE_KPDOT: {
+                scancode_can_numlock = true;
+                scancode_can_scrlock = true;
+                break;
+            }
+            // scrlock only on these keys
+            case KEYBOARD_SCANCODE_BACKTICK:
+            case KEYBOARD_SCANCODE_1:
+            case KEYBOARD_SCANCODE_2:
+            case KEYBOARD_SCANCODE_3:
+            case KEYBOARD_SCANCODE_4:
+            case KEYBOARD_SCANCODE_5:
+            case KEYBOARD_SCANCODE_6:
+            case KEYBOARD_SCANCODE_7:
+            case KEYBOARD_SCANCODE_8:
+            case KEYBOARD_SCANCODE_9:
+            case KEYBOARD_SCANCODE_0:
+            case KEYBOARD_SCANCODE_MINUS:
+            case KEYBOARD_SCANCODE_EQUAL:
+            case KEYBOARD_SCANCODE_OPENSQ:
+            case KEYBOARD_SCANCODE_CLOSESQ:
+            case KEYBOARD_SCANCODE_BSLASH:
+            case KEYBOARD_SCANCODE_SEMI:
+            case KEYBOARD_SCANCODE_QUOTE:
+            case KEYBOARD_SCANCODE_COMMA:
+            case KEYBOARD_SCANCODE_DOT:
+            case KEYBOARD_SCANCODE_SLASH: {
+                scancode_can_scrlock = true;
+                break;
+            }
+            // capslock+scrlock on remaining keys
+            default: {
+                scancode_can_capslock = true;
+                scancode_can_scrlock = true;
+            }
+            }
+        }
+
+        // set modifiers for mode0-2
+        if (keyboard_mode != KEYBOARD_MODE_3 && keyboard_has_data == true) {
+            // map locks to shift if option is enabled
+            if (map_lock == true) {
+                if (caps_lock == true && scancode_can_capslock == true)
+                    this_state.keyboard.mod_shift = true;
+                if (num_lock == true && scancode_can_numlock == true)
+                    this_state.keyboard.mod_shift = true;
+                if (scroll_lock == true && scancode_can_scrlock == true)
+                    this_state.keyboard.mod_shift = true;
+
+                // hide lock scan-codes from mode0-2 if map_lock is enabled
+                if (scancode_is_lock == true)
+                    scancode_is_modifier = true;
+            }
+            // invert mod_shift: if map_lock is enabled and a lock is active,
+            // pressing shift will CLEAR the shift bit
+            if (modifier_shift == true)
+                this_state.keyboard.mod_alt = !this_state.keyboard.mod_alt;
+
+            this_state.keyboard.mod_ctrl = modifier_ctrl;
+            this_state.keyboard.mod_alt = modifier_alt;
+            this_state.keyboard.mod_meta = modifier_meta;
         }
 
         // process keyboard event according to current mode
@@ -321,11 +425,58 @@ void s65x_keyboard_task(void *pvParameters) {
 
             if (keyboard_has_data == true) {
                 // process received scancode
-                // There are
+                // There are 4 possible scenarios here:
+                // new scan-code received with key-down from zero-code
+                // current scan-code received with key-up
+                // different scan-code to current received with key-down or key-up
+                // the last 2 cases can be ignored, we only need to process the first 2
+
+                if (mode0_keypress.keyboard.scan_code == KEYBOARD_SCANCODE_NONE && this_state.keyboard.key_up == false) {
+                    // new scan-code coming in!
+                    mode0_keypress = this_state;
+
+                    // check AltGr mode and modifier, send extra AltGr scancode if needed
+                    if (altgr_mode == true && modifier_altgr == true) {
+                        s65x_keyboard altgr_key = {.u16 = 0};
+                        altgr_key.keyboard.signature = S65X_SIGNATURE_KEYBOARD;
+                        altgr_key.keyboard.scan_code = KEYBOARD_SCANCODE_RALT_ALTGR;
+                        altgr_key.keyboard.key_up = this_state.keyboard.key_up;
+                        if (xQueueSendToBack(s65x_keyboard_output_queue, &altgr_key, 1) != pdTRUE)
+                            s65x_controller_run_fail();
+                    }
+
+                    // send now-current scancode back out
+                    if (xQueueSendToBack(s65x_keyboard_output_queue, &mode0_keypress, 1) != pdTRUE)
+                        s65x_controller_run_fail();
+
+                } else if (mode0_keypress.keyboard.scan_code == this_state.keyboard.scan_code && this_state.keyboard.key_up == true) {
+                    // key-up for this scan-code coming in!
+                    // set latched key-press to key-up
+                    mode0_keypress.keyboard.key_up = true;
+
+                    // send latched key-press with key-up back out
+                    if (xQueueSendToBack(s65x_keyboard_output_queue, &mode0_keypress, 1) != pdTRUE)
+                        s65x_controller_run_fail();
+
+                    // check AltGr mode and modifier, send extra AltGr scancode if needed
+                    if (altgr_mode == true && modifier_altgr == true) {
+                        s65x_keyboard altgr_key = {.u16 = 0};
+                        altgr_key.keyboard.signature = S65X_SIGNATURE_KEYBOARD;
+                        altgr_key.keyboard.scan_code = KEYBOARD_SCANCODE_RALT_ALTGR;
+                        altgr_key.keyboard.key_up = this_state.keyboard.key_up;
+                        if (xQueueSendToBack(s65x_keyboard_output_queue, &altgr_key, 1) != pdTRUE)
+                            s65x_controller_run_fail();
+                    }
+
+                    // clear latched key-press
+                    mode0_keypress.u16 = 0;
+                }
             } else {
                 // no scan-code received
                 if (wakeup_has_data == false) {
                     // this was a poll from the controller, re-send current state
+                    if (xQueueSendToBack(s65x_keyboard_output_queue, &mode0_keypress, 1) != pdTRUE)
+                        s65x_controller_run_fail();
                 } else
                     // no scan-code received, but one was previously received, so just go back to sleep
                     wakeup_has_data = false;
@@ -366,7 +517,7 @@ void s65x_keyboard_task(void *pvParameters) {
             // Mode 3
             // Raw scan codes are sent only on change, modifiers are not set
             // Zero scan code is sent on no-change
-            if (xQueueSendToBack(s65x_keyboard_output_queue, &this_state, portMAX_DELAY) != pdTRUE)
+            if (xQueueSendToBack(s65x_keyboard_output_queue, &this_state, 1) != pdTRUE)
                 s65x_controller_run_fail();
 
             // no new data received, go back to sleep
@@ -375,6 +526,47 @@ void s65x_keyboard_task(void *pvParameters) {
 
             break;
         }
+        }
+
+        // enable auto-repeat
+        if (keyboard_autorepeat == true && scancode_is_modifier == false && scancode_is_lock == false && ((keyboard_mode == KEYBOARD_MODE_0 && this_state.keyboard.scan_code == mode0_keypress.keyboard.scan_code) || keyboard_mode == KEYBOARD_MODE_1 || keyboard_mode == KEYBOARD_MODE_2)) {
+            switch (this_state.keyboard.scan_code) {
+
+            // non-repeating keys
+            case KEYBOARD_SCANCODE_PRTSCN:
+            case KEYBOARD_SCANCODE_PAUSE:
+            case KEYBOARD_SCANCODE_VOLMUTE:
+            case KEYBOARD_SCANCODE_APPS:
+            case KEYBOARD_SCANCODE_SLEEP:
+            case KEYBOARD_SCANCODE_POWER: {
+                break;
+            }
+
+            // everything else can repeat
+            default: {
+                if (this_state.keyboard.key_up == true && keyboard_keypress_timers[this_state.keyboard.scan_code] != NULL) {
+                    // stop and delete timer
+                    if (xTimerStop(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
+                        s65x_controller_run_fail();
+                    if (xTimerDelete(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
+                        s65x_controller_run_fail();
+                    portENTER_CRITICAL();
+                    keyboard_keypress_timers[this_state.keyboard.scan_code] = NULL;
+                    portEXIT_CRITICAL();
+                }
+                if (this_state.keyboard.key_up == false && keyboard_keypress_timers[this_state.keyboard.scan_code] == NULL) {
+                    // create and start timer
+                    portENTER_CRITICAL();
+                    keyboard_keypress_timers[this_state.keyboard.scan_code] = xTimerCreate("KB_REPEAT_T", pdMS_TO_TICKS(KEYBOARD_AUTOREPEAT_DELAY), pdTRUE, (void *)this_state.keyboard.scan_code, s65x_keyboard_autorepeat_cb);
+                    portEXIT_CRITICAL();
+                    if (keyboard_keypress_timers[this_state.keyboard.scan_code] == NULL)
+                        s65x_controller_run_fail();
+                    if (xTimerStart(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
+                        s65x_controller_run_fail();
+                }
+                break;
+            }
+            }
         }
 
         // sleepy time after chewing on all the data!
