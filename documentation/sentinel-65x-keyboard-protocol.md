@@ -62,7 +62,7 @@ Key State bit \[15] is clear on key-down, set on key-up.
 
 High byte \[15:8] is similar to the PS/2 Keyboard Scan Code Set 1 single-byte codes (ref: <https://wiki.osdev.org/PS/2_Keyboard#Scan_Code_Set_1>), where key-down scan codes clear bit \[15] and key-up scan codes set bit \[15]. Multi-byte PS/2 scan codes are mapped according to the following table, setting and clearing bit \[15] on key-up and key-down as appropriate:
 
-* **TO-DO:** Expand this to complete set of extended PS/2 and USB scan codes.
+* **TO-DO:** Expand this to complete set of USB scan codes.
 
 |Sentinel 65X Scan Code|PS/2 Scan Code|USB Scan Code|Key name|
 |-|-|-|-|

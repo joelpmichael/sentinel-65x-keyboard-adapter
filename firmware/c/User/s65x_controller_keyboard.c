@@ -37,6 +37,9 @@ static TaskHandle_t s65x_keyboard_task_handle = NULL;
 
 // configuration variables and set functions
 
+// current N-key rollover keyboard state (mode 1, 2, 3)
+static s65x_keyboard keyboard_keypress_state[128] = {0};
+
 // keyboard mode
 static s65x_keyboard_mode_t keyboard_mode = KEYBOARD_MODE_0;
 void s65x_keyboard_set_mode(s65x_keyboard_mode_t mode) {
@@ -48,7 +51,7 @@ void s65x_keyboard_set_mode(s65x_keyboard_mode_t mode) {
 // enable auto-repeat for mode 0 and 1
 static bool keyboard_autorepeat = false;
 // timers for auto-repeat mode
-TimerHandle_t keyboard_keypress_timers[128] = {0};
+TimerHandle_t keyboard_keypress_timers[128] = {NULL};
 void s65x_keyboard_set_autorepeat(bool repeat) {
     portENTER_CRITICAL();
     keyboard_autorepeat = repeat;
@@ -56,6 +59,23 @@ void s65x_keyboard_set_autorepeat(bool repeat) {
 }
 // auto-repeat timer callback function
 void s65x_keyboard_autorepeat_cb(TimerHandle_t xTimer) {
+    // after first timer repeat period, set the timer timeout to autorepeat rate
+    if (xTimerGetPeriod(xTimer) != KEYBOARD_AUTOREPEAT_RATE) {
+        if (xTimerChangePeriod(xTimer, KEYBOARD_AUTOREPEAT_RATE, 1) != pdPASS)
+            s65x_controller_run_fail();
+    }
+    keyboard_scancode_t scancode = (keyboard_scancode_t)pvTimerGetTimerID(xTimer);
+
+    portENTER_CRITICAL();
+    keyboard_keypress_state[scancode].keyboard.key_up = true;
+    portEXIT_CRITICAL();
+    if (xQueueSendToBack(s65x_keyboard_output_queue, &keyboard_keypress_state[scancode], portMAX_DELAY) != pdTRUE)
+        s65x_controller_run_fail();
+    portENTER_CRITICAL();
+    keyboard_keypress_state[scancode].keyboard.key_up = false;
+    portEXIT_CRITICAL();
+    if (xQueueSendToBack(s65x_keyboard_output_queue, &keyboard_keypress_state[scancode], portMAX_DELAY) != pdTRUE)
+        s65x_controller_run_fail();
 }
 
 // re-mapping table
@@ -142,10 +162,8 @@ bool s65x_keyboard_receive_event(s65x_keyboard event) {
 void s65x_keyboard_task(void *pvParameters) {
     s65x_keyboard_task_handle = xTaskGetCurrentTaskHandle();
 
-    keyboard_scancode_t mode0_keypress = KEYBOARD_SCANCODE_NONE;
-
-    // current N-key rollover keyboard state (mode 1, 2, 3)
-    bool keyboard_keypress_state[128] = {0};
+    s65x_keyboard mode0_keypress = {.u16 = 0};
+    mode0_keypress.keyboard.signature = S65X_SIGNATURE_KEYBOARD;
 
     // current modifier key status
     bool modifier_ctrl = false;
@@ -177,10 +195,6 @@ void s65x_keyboard_task(void *pvParameters) {
         if (xQueueReceive(s65x_keyboard_input_queue, &this_state, 0) == pdTRUE)
             keyboard_has_data = true;
 
-        // set outer flag only if unset
-        if (wakeup_has_data == false)
-            wakeup_has_data = keyboard_has_data;
-
         // check if this is an error, send directly to queue if it is
         if (this_state.error.signature == S65X_SIGNATURE_ERROR) {
             if (xQueueSendToBack(s65x_keyboard_output_queue, &this_state, portMAX_DELAY) != pdTRUE) {
@@ -188,6 +202,10 @@ void s65x_keyboard_task(void *pvParameters) {
             }
             continue;
         }
+
+        // set outer flag only if unset
+        if (wakeup_has_data == false)
+            wakeup_has_data = keyboard_has_data;
 
         // check that the received state is actually a keyboard (this should never happen!)
         if (this_state.keyboard.signature != S65X_SIGNATURE_KEYBOARD)
@@ -197,6 +215,103 @@ void s65x_keyboard_task(void *pvParameters) {
         portENTER_CRITICAL();
         this_state.keyboard.scan_code = keyboard_remap[this_state.keyboard.scan_code];
         portEXIT_CRITICAL();
+
+        // process modifier keys, and arm auto-repeats on repeating keys
+        // doing auto-repeats here allows us to use a single switch/case statement
+
+        switch (this_state.keyboard.scan_code) {
+
+        // modifier keys
+        case KEYBOARD_SCANCODE_LALT: {
+            portENTER_CRITICAL();
+            modifier_alt = !this_state.keyboard.key_up;
+            portEXIT_CRITICAL();
+        }
+        case KEYBOARD_SCANCODE_RALT_ALTGR: {
+            // special handling for right-alt / AltGr
+            portENTER_CRITICAL();
+            if (altgr_mode == true) {
+                modifier_altgr = !this_state.keyboard.key_up;
+            } else {
+                modifier_alt = !this_state.keyboard.key_up;
+            }
+            portEXIT_CRITICAL();
+            break;
+        }
+        case KEYBOARD_SCANCODE_LSHIFT:
+        case KEYBOARD_SCANCODE_RSHIFT: {
+            portENTER_CRITICAL();
+            modifier_shift = !this_state.keyboard.key_up;
+            portEXIT_CRITICAL();
+            break;
+        }
+        case KEYBOARD_SCANCODE_LCTRL:
+        case KEYBOARD_SCANCODE_RCTRL: {
+            portENTER_CRITICAL();
+            modifier_ctrl = !this_state.keyboard.key_up;
+            portEXIT_CRITICAL();
+            break;
+        }
+        case KEYBOARD_SCANCODE_LMETA:
+        case KEYBOARD_SCANCODE_RMETA: {
+            portENTER_CRITICAL();
+            modifier_meta = !this_state.keyboard.key_up;
+            portEXIT_CRITICAL();
+            break;
+        }
+
+        // lock keys
+        case KEYBOARD_SCANCODE_CAPSLOCK:
+        case KEYBOARD_SCANCODE_NUMLOCK:
+        case KEYBOARD_SCANCODE_SCRLOCK: {
+            portENTER_CRITICAL();
+            if (this_state.keyboard.scan_code == KEYBOARD_SCANCODE_CAPSLOCK)
+                caps_lock = !this_state.keyboard.key_up;
+            else if (this_state.keyboard.scan_code == KEYBOARD_SCANCODE_NUMLOCK)
+                num_lock = !this_state.keyboard.key_up;
+            else if (this_state.keyboard.scan_code == KEYBOARD_SCANCODE_SCRLOCK)
+                num_lock = !this_state.keyboard.key_up;
+            portEXIT_CRITICAL();
+            break;
+        }
+
+        // non-repeating keys
+        case KEYBOARD_SCANCODE_PRTSCN:
+        case KEYBOARD_SCANCODE_PAUSE:
+        case KEYBOARD_SCANCODE_VOLMUTE:
+        case KEYBOARD_SCANCODE_APPS:
+        case KEYBOARD_SCANCODE_SLEEP:
+        case KEYBOARD_SCANCODE_POWER: {
+            break;
+        }
+
+        // everything else can repeat
+        default: {
+            if (keyboard_autorepeat == true) {
+                if (this_state.keyboard.key_up == true && keyboard_keypress_timers[this_state.keyboard.scan_code] != NULL) {
+                    // stop and delete timer
+                    if (xTimerStop(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
+                        s65x_controller_run_fail();
+                    if (xTimerDelete(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
+                        s65x_controller_run_fail();
+                    portENTER_CRITICAL();
+                    keyboard_keypress_timers[this_state.keyboard.scan_code] = NULL;
+                    portEXIT_CRITICAL();
+                }
+                if (this_state.keyboard.key_up == false && keyboard_keypress_timers[this_state.keyboard.scan_code] == NULL) {
+                    // create and start timer
+                    portENTER_CRITICAL();
+                    keyboard_keypress_timers[this_state.keyboard.scan_code] = xTimerCreate("KB_REPEAT_T", pdMS_TO_TICKS(KEYBOARD_AUTOREPEAT_DELAY), pdTRUE, (void *)this_state.keyboard.scan_code, s65x_keyboard_autorepeat_cb);
+                    portEXIT_CRITICAL();
+                    if (keyboard_keypress_timers[this_state.keyboard.scan_code] == NULL)
+                        s65x_controller_run_fail();
+                    if (xTimerStart(keyboard_keypress_timers[this_state.keyboard.scan_code], 1) != pdPASS)
+                        s65x_controller_run_fail();
+                }
+            }
+            break;
+        }
+        }
 
         // process keyboard event according to current mode
         switch (keyboard_mode) {
