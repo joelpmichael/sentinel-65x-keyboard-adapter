@@ -24,7 +24,8 @@ C_SRCS += \
 ../User/usb_host_hub.c \
 ../User/usb_host_keyboard.c \
 ../User/usb_host_mouse.c \
-../User/usb_host_pad.c 
+../User/usb_host_pad.c \
+../User/utils.c 
 
 OBJS += \
 ./User/ch32v20x_it.o \
@@ -47,7 +48,8 @@ OBJS += \
 ./User/usb_host_hub.o \
 ./User/usb_host_keyboard.o \
 ./User/usb_host_mouse.o \
-./User/usb_host_pad.o 
+./User/usb_host_pad.o \
+./User/utils.o 
 
 C_DEPS += \
 ./User/ch32v20x_it.d \
@@ -70,7 +72,8 @@ C_DEPS += \
 ./User/usb_host_hub.d \
 ./User/usb_host_keyboard.d \
 ./User/usb_host_mouse.d \
-./User/usb_host_pad.d 
+./User/usb_host_pad.d \
+./User/utils.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

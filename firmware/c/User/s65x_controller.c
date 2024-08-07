@@ -81,7 +81,7 @@ static volatile uint16_t s65x_current_word = 0xFFFF;
 
 // IRQ callback
 // called on rising edge of CLOCK
-void s65x_controller_on_clock(void) __attribute__((hot, section(".ramfunc")));
+void s65x_controller_on_clock(void) __attribute__((section(".ramfunc")));
 void s65x_controller_on_clock(void) {
     // disable interrupts, run entire IRQ handler inside a critical section
     portENTER_CRITICAL();
@@ -106,7 +106,7 @@ void s65x_controller_on_clock(void) {
 
 // IRQ callback
 // called on rising edge of LATCH
-void s65x_controller_on_latch(void) __attribute__((hot, section(".ramfunc")));
+void s65x_controller_on_latch(void) __attribute__((section(".ramfunc")));
 void s65x_controller_on_latch(void) {
     // disable interrupts while setting the current word
     portENTER_CRITICAL();
@@ -132,7 +132,7 @@ void s65x_controller_on_latch(void) {
  *
  * @return  none
  */
-bool s65x_controller_init(void) {
+__attribute__((section(".slowfunc"))) bool s65x_controller_init(void) {
     // ensure init only runs once, turn it into a no-op if called again
     if (s65x_controller_init_complete == true)
         return true;

@@ -34,6 +34,7 @@
 #include "usb_host.h"
 
 #include "usb_device.h"
+#include "usb_device_cdc-acm.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -42,8 +43,17 @@ void gpio_clock_init(void) __attribute__((section(".slowfunc")));
 void gpio_clock_init(void) {
     // only init clocks; individual GPIOs are configured elsewhere
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOA, DISABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOB, DISABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_GPIOC, DISABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE); // AFIO needed for USB to work!
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_AFIO, ENABLE);
+    RCC_APB2PeriphResetCmd(RCC_APB2Periph_AFIO, DISABLE);
 }
 
 /*********************************************************************
@@ -53,7 +63,7 @@ void gpio_clock_init(void) {
  *
  * @return  none
  */
-int main(void) {
+__attribute__((section(".slowfunc"))) int main(void) {
     // Clock setup
 
     // core clock is already set during pre-main() code
@@ -64,6 +74,18 @@ int main(void) {
 
     // shared peripheral initial setup
     gpio_clock_init();
+
+    // set USB lines to output-low-pushpull-highspeed first, prior to USB init
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_StructInit(&GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12; // USB1 DM/DP
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_ResetBits(GPIOA, GPIO_InitStructure.GPIO_Pin);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7; // USB2 DM/DP
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_ResetBits(GPIOB, GPIO_InitStructure.GPIO_Pin);
 
     // S65X SNES controller port setup
     if (s65x_controller_init() == false)
@@ -139,7 +161,12 @@ int main(void) {
         s65x_controller_post_fail();
 #endif
 
+    // USB device setup for CDC-ACM interface
+    if (usb_device_cdcacm_init() == false)
+        s65x_controller_post_fail();
+
     // USB device setup for config interface
+    // FIXME - this needs a hardware hack on the CH32V203 dev board to make it work!
     if (usb_device_init() == false)
         s65x_controller_post_fail();
 

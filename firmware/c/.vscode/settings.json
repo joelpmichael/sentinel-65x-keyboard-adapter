@@ -2,6 +2,10 @@
     "files.associations": {
         "stdbool.h": "c",
         "stddef.h": "c",
-        "s65x_controller.h": "c"
+        "s65x_controller.h": "c",
+        "timers.h": "c",
+        "ch32v20x.h": "c",
+        "ch32v20x_conf.h": "c",
+        "stdatomic.h": "c"
     }
 }

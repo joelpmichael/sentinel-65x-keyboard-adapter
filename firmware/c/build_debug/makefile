@@ -51,7 +51,7 @@ all: sentinel-65x-keyboard-adapter.elf secondary-outputs
 sentinel-65x-keyboard-adapter.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GNU RISC-V Cross C Linker'
-	riscv-none-elf-gcc -march=rv32imac -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -flto -Wunused -Wuninitialized -Wall -Wextra  -g3 -T "/home/joel/code/sentinel-65x-keyboard-adapter/firmware/c/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"sentinel-65x-keyboard-adapter.map" --specs=nano.specs --specs=nosys.specs -o "sentinel-65x-keyboard-adapter.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	riscv-none-elf-gcc -march=rv32imac -mabi=ilp32 -msmall-data-limit=8 -msave-restore -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -ffreestanding -fno-builtin -flto -Wunused -Wuninitialized -Wall -Wextra  -g3 -T "/home/joel/code/sentinel-65x-keyboard-adapter/firmware/c/Ld/Link.ld" -nostartfiles -Xlinker --gc-sections -Wl,-Map,"sentinel-65x-keyboard-adapter.map" --specs=nano.specs --specs=nosys.specs -o "sentinel-65x-keyboard-adapter.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -16,6 +16,7 @@
 
 void NMI_Handler(void) __attribute__((interrupt(), section(".slowfunc")));
 void HardFault_Handler(void) __attribute__((interrupt(), section(".slowfunc"), noreturn));
+
 void EXTI0_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
 void EXTI1_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
 void EXTI2_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
@@ -23,8 +24,13 @@ void EXTI3_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
 void EXTI4_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
 void EXTI9_5_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
 void EXTI15_10_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void run_exti_handler(uint8_t exti_num) __attribute__((section(".ramfunc")));
 
-void run_exti_handler(uint8_t exti_num) __attribute__((hot, section(".ramfunc")));
+void USB_HP_CAN1_TX_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void USB_LP_CAN1_RX0_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void USBWakeUp_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void USBFS_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void USBFSWakeUp_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
 
 /*********************************************************************
  * @fn      NMI_Handler
@@ -176,4 +182,75 @@ void EXTI15_10_IRQHandler(void) {
         run_exti_handler(i);
     }
     NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+}
+
+// USBD interrupt handlers
+static usbhp_can1tx_handler usb_hp_can1_tx_handler = NULL;
+void set_usbhp_can1tx_handler(usbhp_can1tx_handler handler) {
+    usb_hp_can1_tx_handler = handler;
+}
+void clear_usbhp_can1tx_handler(void) {
+    set_usbhp_can1tx_handler(NULL);
+}
+
+static usblp_can1rx0_handler usb_lp_can1_rx0_handler = NULL;
+void set_usblp_can1rx0_handler(usblp_can1rx0_handler handler) {
+    usb_lp_can1_rx0_handler = handler;
+}
+void clear_usblp_can1rx0_handler(void) {
+    set_usblp_can1rx0_handler(NULL);
+}
+
+static usbwkp_handler usb_wkp_handler = NULL;
+void set_usbwkp_handler(usbwkp_handler handler) {
+    usb_wkp_handler = handler;
+}
+void clear_usbwkp_handler(void) {
+    set_usbwkp_handler(NULL);
+}
+
+static usbfs_handler usb_fs_handler = NULL;
+void set_usbfs_handler(usbfs_handler handler) {
+    usb_fs_handler = handler;
+}
+void clear_usbfs_handler(void) {
+    set_usbfs_handler(NULL);
+}
+
+static usbfswkp_handler usb_fs_wkp_handler = NULL;
+void set_usbfswkp_handler(usbfswkp_handler handler) {
+    usb_fs_wkp_handler = handler;
+}
+void clear_usbfswkp_handler(void) {
+    set_usbfswkp_handler(NULL);
+}
+
+void USB_HP_CAN1_TX_IRQHandler(void) {
+    if (usb_hp_can1_tx_handler != NULL)
+        (usb_hp_can1_tx_handler)();
+    NVIC_ClearPendingIRQ(USB_HP_CAN1_TX_IRQn);
+}
+
+void USB_LP_CAN1_RX0_IRQHandler(void) {
+    if (usb_lp_can1_rx0_handler != NULL)
+        (usb_lp_can1_rx0_handler)();
+    NVIC_ClearPendingIRQ(USB_LP_CAN1_RX0_IRQn);
+}
+
+void USBWakeUp_IRQHandler(void) {
+    if (usb_wkp_handler != NULL)
+        (usb_wkp_handler)();
+    NVIC_ClearPendingIRQ(USBWakeUp_IRQn);
+}
+
+void USBFS_IRQHandler(void) {
+    if (usb_fs_handler != NULL)
+        (usb_fs_handler)();
+    NVIC_ClearPendingIRQ(USBFS_IRQn);
+}
+
+void USBFSWakeUp_IRQHandler(void) {
+    if (usb_fs_wkp_handler != NULL)
+        (usb_fs_wkp_handler)();
+    NVIC_ClearPendingIRQ(USBFSWakeUp_IRQn);
 }

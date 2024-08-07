@@ -576,7 +576,7 @@ void s65x_keyboard_task(void *pvParameters) {
 }
 
 static bool s65x_controller_keyboard_init_complete = false;
-bool s65x_controller_keyboard_init(void) {
+__attribute__((section(".slowfunc"))) bool s65x_controller_keyboard_init(void) {
     // only init once
     if (s65x_controller_keyboard_init_complete == true)
         return true;

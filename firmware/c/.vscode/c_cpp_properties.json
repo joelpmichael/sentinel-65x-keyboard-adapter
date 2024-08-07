@@ -11,7 +11,7 @@
                 "HAS_USB_KEYBOARD",
                 "HAS_PS2_KEYBOARD"
             ],
-            "compilerPath": "~/MRS_Toolchain_Linux_x64_V1.91/RISC-V_Embedded_GCC/bin/riscv-none-embed-gcc",
+            "compilerPath": "/usr/local/MRS_Toolchain_Linux_x64_V1.91/RISC-V_Embedded_GCC/bin/riscv-none-embed-gcc",
             "cStandard": "c17",
             "cppStandard": "c++14",
             "intelliSenseMode": "linux-gcc-arm"

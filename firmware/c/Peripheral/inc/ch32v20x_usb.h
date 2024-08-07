@@ -396,6 +396,71 @@ extern "C" {
 #define USBFS_UH_T_RES 0x01      // expected handshake response type for host transmittal (SETUP/OUT): 0=ACK (ready), 1=no response, time out from device, for isochronous transactions
 
 /*******************************************************************************/
+/* USBD Related Register Macro Definition */
+
+/* R16_USBD_CNTR */
+#define USBD_CNTR_CTRM (1 << 15)      // Correct transfer interrupt: 1 = enable
+#define USBD_CNTR_PMAOVRM (1 << 14)   // Packet buffer overflow interrupt: 1 = enable
+#define USBD_CNTR_ERRM (1 << 13)      // Error interrupt: 1 = enable
+#define USBD_CNTR_WKUPM (1 << 12)     // Wake-up interrupt: 1 = enable
+#define USBD_CNTR_SUSPM (1 << 11)     // Suspend interrupt: 1 = enable
+#define USBD_CNTR_RESETM (1 << 10)    // Reset interrupt: 1 = enable
+#define USBD_CNTR_SOFM (1 << 9)       // Start of frame interrupt: 1 = enable
+#define USBD_CNTR_ESOFM (1 << 8)      // Start of frame error interrupt: 1 = enable
+#define USBD_CNTR_MODE_1WIRE (1 << 7) // 1-wire mode (only supported on CH32F20x_D8 family)
+#define USBD_CNTR_RESUME (1 << 4)     // Wake-up request control: 1 = Output wake-up signal
+#define USBD_CNTR_FSUSP (1 << 3)      // Mask suspend detection control
+#define USBD_CNTR_LPMODE (1 << 2)     // Low-power mode control: 1 = low-power mode
+#define USBD_CNTR_PDWN (1 << 1)       // Power down mode
+#define USBD_CNTR_FRES (1 << 0)       // Force USB reset control: 1 = Forcibly reset the USBD module. The USBD module will remain in reset until software clears this bit
+
+/* R16_USBD_ISTR */
+#define USBD_ISTR_CTR (1 << 15)     // Correct transfer interrupt
+#define USBD_ISTR_PMAOVR (1 << 14)  // Packet buffer overflow interrupt
+#define USBD_ISTR_ERR (1 << 13)     // Error interrupt
+#define USBD_ISTR_WKUP (1 << 12)    // Wakeup interrupt
+#define USBD_ISTR_SUSP (1 << 11)    // Suspend interrupt
+#define USBD_ISTR_RESET (1 << 10)   // Reset interrupt
+#define USBD_ISTR_SOF (1 << 9)      // SOF interrupt
+#define USBD_ISTR_ESOF (1 << 8)     // ESOF interrupt
+#define USBD_ISTR_DIR (1 << 4)      // Data transfer direction: 0 = Data transfer from the USBD module to the PC host
+#define USBD_ISTR_EP_ID_MASK 0b1111 // Endpoint ID of the interrupt
+
+/* R16_USBD_FNR */
+#define USBD_FNR_RXDP (1 << 15)          // DP line level status
+#define USBD_FNR_RXDM (1 << 14)          // DM line level status
+#define USBD_FNR_LCK (1 << 13)           // SOF packet count stop lock
+#define USBD_FNR_LSOF_MASK (0b11 << 11)  // Lost SOF frame count
+#define USBD_FNR_FN_MASK (0b11111111111) // SOF frame number
+
+/* R16_USBD_DADDR */
+#define USBD_DADDR_EF (1 << 7)          // USB function enable
+#define USBD_DADDR_ADD_MASK (0b1111111) // USB device address
+
+/* R16_USBD_BTABLE */
+#define USBD_BTABLE_BLABLE_MASK (0b1111111111111000) // offset address from 0x40006000 of the packet buffer description table
+
+/* btable structure */
+
+/* BTABLE mapping */
+#define USBD_BTABLE_BASE (USBD_CAN1_CAN2_SRAM_BASE)
+#define USBD_BTABLE_EP(x) ((USBD_BTABLE_TypeDef *)(USBD_BTABLE_BASE + (x * 16))) // 32-bit absolute memory address
+#define USBD_BTABLE_END (USBD->BTABLE + (8 * 8))                                 // 16-bit relative address
+
+/* R16_USBD_EPR[0:7] */
+#define USBD_EPR(x) ((USBD_EPR_TypeDef *)(USBD_EP_BASE + (x * 4)))
+#define USBD_EPR_CTR_RX (1 << 15)          // Correct reception flag (OUT/SETUP).
+#define USBD_EPR_DTOG_RX (1 << 14)         // toggle DATA0-1 for RX
+#define USBD_EPR_STAT_RX_MASK (0b11 << 12) // RX reception status
+#define USBD_EPR_SETUP (1 << 11)           // SETUP frame received flag
+#define USBD_EPR_EPTYPE_MASK (0b11 << 9)   // Endpoint type
+#define USBD_EPR_EP_KIND (1 << 8)          // Endpoint type control bits
+#define USBD_EPR_CTR_TX (1 << 7)           // Correct transmission flag (IN)
+#define USBD_EPR_DTOG_TX (1 << 6)          // toggle DATA0-1 for TX
+#define USBD_EPR_STAT_TX_MASK (0b11 << 4)  // TX status
+#define USBD_EPR_EA_MASK (0b1111 << 0)     // Endpoint address
+
+/*******************************************************************************/
 /* Struct Definition */
 
 /* USB Setup Request */

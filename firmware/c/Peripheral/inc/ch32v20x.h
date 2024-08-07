@@ -139,9 +139,10 @@ typedef enum IRQn {
 #define USBOTG_FS USBFSD
 #define USBOTG_H_FS USBFSH
 
+#include <stdint.h>
+
 #include "core_riscv.h"
 #include "system_ch32v20x.h"
-#include <stdint.h>
 
 /* Standard Peripheral Library old definitions (maintained for legacy purpose) */
 #define HSI_Value HSI_VALUE
@@ -320,6 +321,11 @@ typedef struct
     uint32_t RESERVED5[8];
     CAN_FilterRegister_TypeDef sFilterRegister[28];
 } CAN_TypeDef;
+
+/*
+typedef struct {
+} CAN_SRAM_TypeDef;
+*/
 
 /* CRC Calculation Unit */
 typedef struct
@@ -635,6 +641,54 @@ typedef struct
     __IO uint32_t CR;
 } OPA_TypeDef;
 
+/* USBD Registers */
+typedef struct {
+    __IO uint16_t EPR0;
+    uint16_t RESERVED0;
+    __IO uint16_t EPR1;
+    uint16_t RESERVED1;
+    __IO uint16_t EPR2;
+    uint16_t RESERVED2;
+    __IO uint16_t EPR3;
+    uint16_t RESERVED3;
+    __IO uint16_t EPR4;
+    uint16_t RESERVED4;
+    __IO uint16_t EPR5;
+    uint16_t RESERVED5;
+    __IO uint16_t EPR6;
+    uint16_t RESERVED6;
+    __IO uint16_t EPR7;
+    uint16_t RESERVED7;
+} USBD_Endpoint_TypeDef;
+
+typedef struct {
+    __IO uint16_t CNTR;
+    uint16_t RESERVED0;
+    __IO uint16_t ISTR;
+    uint16_t RESERVED1;
+    __IO uint16_t FNR;
+    uint16_t RESERVED2;
+    __IO uint16_t DADDR;
+    uint16_t RESERVED3;
+    __IO uint16_t BTABLE;
+    uint16_t RESERVED4;
+} USBD_Control_TypeDef;
+
+typedef struct {
+    __IO uint16_t ADDR_TX;
+    uint16_t RESERVED00;
+    __IO uint16_t COUNT_TX;
+    uint16_t RESERVED01;
+    __IO uint16_t ADDR_RX;
+    uint16_t RESERVED02;
+    __IO uint16_t COUNT_RX;
+    uint16_t RESERVED03;
+} USBD_BTABLE_TypeDef;
+
+typedef struct {
+    __IO uint16_t EPR;
+} USBD_EPR_TypeDef;
+
 /* USBFS Registers */
 typedef struct
 {
@@ -819,6 +873,9 @@ typedef struct
 #define UART4_BASE (APB1PERIPH_BASE + 0x4C00)
 #define I2C1_BASE (APB1PERIPH_BASE + 0x5400)
 #define I2C2_BASE (APB1PERIPH_BASE + 0x5800)
+#define USBD_EP_BASE (APB1PERIPH_BASE + 0x5C00)
+#define USBD_CTRL_BASE (APB1PERIPH_BASE + 0x5C40)
+#define USBD_CAN1_CAN2_SRAM_BASE (APB1PERIPH_BASE + 0x6000)
 #define CAN1_BASE (APB1PERIPH_BASE + 0x6400)
 #define BKP_BASE (APB1PERIPH_BASE + 0x6C00)
 #define PWR_BASE (APB1PERIPH_BASE + 0x7000)
@@ -876,6 +933,8 @@ typedef struct
 #define UART4 ((USART_TypeDef *)UART4_BASE)
 #define I2C1 ((I2C_TypeDef *)I2C1_BASE)
 #define I2C2 ((I2C_TypeDef *)I2C2_BASE)
+#define USBD_EP ((USBD_Endpoint_TypeDef *)USBD_EP_BASE)
+#define USBD ((USBD_Control_TypeDef *)USBD_CTRL_BASE)
 #define CAN1 ((CAN_TypeDef *)CAN1_BASE)
 #define BKP ((BKP_TypeDef *)BKP_BASE)
 #define PWR ((PWR_TypeDef *)PWR_BASE)
