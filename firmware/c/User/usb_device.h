@@ -41,10 +41,10 @@ typedef enum usbd_endpoint_type_e {
 } usbd_endpoint_type_t;
 
 typedef enum usbd_enpoint_xfer_mode_e {
-    ENDPOINT_MODE_BULK = 0b00,
-    ENDPOINT_MODE_CONTROL = 0b01,
-    ENDPOINT_MODE_ISO = 0b10,
-    ENDPOINT_MODE_IRQ = 0b11,
+    ENDPOINT_MODE_BULK = USBD_EPR_EPTYPE_BULK,
+    ENDPOINT_MODE_CONTROL = USBD_EPR_EPTYPE_CONTROL,
+    ENDPOINT_MODE_ISO = USBD_EPR_EPTYPE_ISO,
+    ENDPOINT_MODE_IRQ = USBD_EPR_EPTYPE_INTERRUPT,
 } usbd_endpoint_xfer_mode_t;
 
 typedef void (*in_xfer_cb)(void);

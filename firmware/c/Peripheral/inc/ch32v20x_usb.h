@@ -449,16 +449,35 @@ extern "C" {
 
 /* R16_USBD_EPR[0:7] */
 #define USBD_EPR(x) ((USBD_EPR_TypeDef *)(USBD_EP_BASE + (x * 4)))
-#define USBD_EPR_CTR_RX (1 << 15)          // Correct reception flag (OUT/SETUP).
-#define USBD_EPR_DTOG_RX (1 << 14)         // toggle DATA0-1 for RX
-#define USBD_EPR_STAT_RX_MASK (0b11 << 12) // RX reception status
-#define USBD_EPR_SETUP (1 << 11)           // SETUP frame received flag
-#define USBD_EPR_EPTYPE_MASK (0b11 << 9)   // Endpoint type
-#define USBD_EPR_EP_KIND (1 << 8)          // Endpoint type control bits
-#define USBD_EPR_CTR_TX (1 << 7)           // Correct transmission flag (IN)
-#define USBD_EPR_DTOG_TX (1 << 6)          // toggle DATA0-1 for TX
-#define USBD_EPR_STAT_TX_MASK (0b11 << 4)  // TX status
-#define USBD_EPR_EA_MASK (0b1111 << 0)     // Endpoint address
+#define USBD_EPR_CTR_RX (1 << 15)              // Correct reception flag (OUT/SETUP).
+#define USBD_EPR_DTOG_RX (1 << 14)             // toggle DATA0-1 for RX
+#define USBD_EPR_STAT_RX_DISABLED (0b00 << 12) // RX Disabled (ignores all RX)
+#define USBD_EPR_STAT_RX_STALL (0b01 << 12)    // RX Stall (error)
+#define USBD_EPR_STAT_RX_NAK (0b10 << 12)      // RX NAK (not ready for RX)
+#define USBD_EPR_STAT_RX_ACK (0b11 << 12)      // RX ACK (ok for RX)
+#define USBD_EPR_STAT_RX_MASK (0b11 << 12)     // RX reception status
+#define USBD_EPR_SETUP (1 << 11)               // SETUP frame received flag
+#define USBD_EPR_EPTYPE_BULK (0b00 << 9)       // Bulk endpoint
+#define USBD_EPR_EPTYPE_CONTROL (0b01 << 9)    // Control endpoint
+#define USBD_EPR_EPTYPE_ISO (0b10 << 9)        // Isochronous endpoint
+#define USBD_EPR_EPTYPE_INTERRUPT (0b11 << 9)  // Interrupt endpoint
+#define USBD_EPR_EPTYPE_MASK (0b11 << 9)       // Endpoint type
+#define USBD_EPR_EP_KIND (1 << 8)              // Endpoint type control bits
+#define USBD_EPR_CTR_TX (1 << 7)               // Correct transmission flag (IN)
+#define USBD_EPR_DTOG_TX (1 << 6)              // toggle DATA0-1 for TX
+#define USBD_EPR_STAT_TX_DISABLED (0b00 << 4)  // TX Disabled (ignores all TX)
+#define USBD_EPR_STAT_TX_STALL (0b01 << 4)     // TX Stall (error)
+#define USBD_EPR_STAT_TX_NAK (0b10 << 4)       // TX NAK (not ready for TX)
+#define USBD_EPR_STAT_TX_ACK (0b11 << 4)       // TX ACK (ok for TX)
+#define USBD_EPR_STAT_TX_MASK (0b11 << 4)      // TX status
+#define USBD_EPR_EA_MASK (0b1111 << 0)         // Endpoint address
+
+// EPR with toggle-bits unset and clear-bits uncleared
+#define USBD_EPR_INVARIANT(x) ((USBD_EPR(x)->EPR & ~(USBD_EPR_DTOG_RX | USBD_EPR_STAT_RX_MASK | USBD_EPR_DTOG_TX | USBD_EPR_STAT_TX_MASK)) | (USBD_EPR_CTR_RX | USBD_EPR_CTR_TX))
+
+// eeeeeeeeeeeeeeeeeeeeeeee this is fucking disgusting
+#define USBD_EPR_STAT_RX(x, y) ((USBD_EPR_INVARIANT(x)) | ((USBD_EPR(x)->EPR & USBD_EPR_STAT_RX_MASK) ^ y))
+#define USBD_EPR_STAT_TX(x, y) ((USBD_EPR_INVARIANT(x)) | ((USBD_EPR(x)->EPR & USBD_EPR_STAT_TX_MASK) ^ y))
 
 /*******************************************************************************/
 /* Struct Definition */

@@ -256,28 +256,67 @@ __attribute__((section(".slowfunc"))) bool usbd_register_endpoint(usb_endpoint_t
 
     return true;
 }
+
 __attribute__((section(".ramfunc"))) static bool usbd_reset(void) {
+    // mask RESET interrupt and clear any pending USBD IRQs
+    USBD->CNTR &= ~(USBD_CNTR_RESETM);
+    USBD->ISTR = 0;
+    NVIC_ClearPendingIRQ(USB_HP_CAN1_TX_IRQn);
+    NVIC_ClearPendingIRQ(USB_LP_CAN1_RX0_IRQn);
+    NVIC_ClearPendingIRQ(USBWakeUp_IRQn);
+
     // enter reset and clear all control bits
     USBD->CNTR = USBD_CNTR_FRES;
-    // release reset - can't configure endpoint registers while in reset
-    USBD->CNTR &= ~(USBD_CNTR_PDWN | USBD_CNTR_FRES);
 
-    // Clear device address
-    USBD->DADDR |= USBD_DADDR_EF;
-    USBD->DADDR &= ~(USBD_DADDR_ADD_MASK);
+    // busy-poll for reset IRQ
+    while ((USBD->ISTR & USBD_ISTR_RESET) == 0)
+        ;
+
+    // release reset - can't configure endpoint registers while in reset
+    USBD->CNTR = 0;
+
+    // busy-poll for end of reset
+    while ((USBD->ISTR & USBD_ISTR_RESET) != 0)
+        USBD->ISTR = 0;
+
+    // Clear device address (should already be done) and enable device function
+    USBD->DADDR = USBD_DADDR_EF;
 
     // reset all endpoints
     for (register uint8_t i = 0; i < num_endpoints; i++) {
+        // make sure endpoint register is zeroed
+        // any toggle-bits that are currently set will clear themselves
+        // clear all the other bits so they reset to zero
+        // WARNING: all other usage of USBD_EPR(x)->EPR = Y should use the USBD_EPR_INVARIANT(x) macro!
+        USBD_EPR(i)->EPR &= (USBD_EPR_DTOG_RX | USBD_EPR_STAT_RX_MASK | USBD_EPR_DTOG_TX | USBD_EPR_STAT_RX_MASK);
+        USBD_EPR(i)->EPR = ((USBD_EPR_INVARIANT(i) & ~(USBD_EPR_EA_MASK)) | i);
+        USBD_BTABLE_EP(i)->COUNT_TX = 0;
+        USBD_BTABLE_EP(i)->COUNT_RX = 0;
+
         if (usbd_endpoints[i] == NULL)
             continue;
-        register uint16_t endpoint_register = USBD_EPR(i)->EPR;
-        endpoint_register |= usbd_endpoints[i]->mode << 9;
+
+        // determine stuffing of COUNT_RX bits
+        // calculate USBD_COUNTx_RX high bits
+        uint16_t count_rx = 0;
+        if (usbd_endpoints[i]->frame_maxlen < 64)
+            count_rx = ((usbd_endpoints[i]->frame_maxlen >> 1) << 10); // guaranteed to not be 0
+        else {
+            // when length >= 64, the 5 LSBs need to be 0 (divisible by 32)
+            if ((usbd_endpoints[i]->frame_maxlen & 0b11111) != 0)
+                return false;
+            count_rx = (1 << 15) | (((usbd_endpoints[i]->frame_maxlen >> 5) - 1) << 10); // guaranteed to be <= 512
+        }
+
+        USBD_EPR(i)->EPR = ((USBD_EPR_INVARIANT(i) & ~(USBD_EPR_EPTYPE_MASK)) | usbd_endpoints[i]->mode);
 
         switch (usbd_endpoints[i]->type) {
         case ENDPOINT_IN_OUT_SINGLE: {
-            endpoint_register |= (endpoint_register & USBD_EPR_STAT_RX_MASK) ^ (0b11 << 12); // ACK
-            endpoint_register |= (endpoint_register & USBD_EPR_STAT_TX_MASK) ^ (0b10 << 4);  // NAK
-            endpoint_register &= (USBD_EPR_EPTYPE_MASK | USBD_EPR_STAT_RX_MASK | USBD_EPR_STAT_TX_MASK);
+            USBD_EPR(i)->EPR = USBD_EPR_STAT_RX(i, USBD_EPR_STAT_RX_ACK);
+            USBD_EPR(i)->EPR = USBD_EPR_STAT_TX(i, USBD_EPR_STAT_TX_NAK);
+
+            USBD_BTABLE_EP(i)->COUNT_RX = count_rx;
+
             break;
         }
         case ENDPOINT_IN_DOUBLE: {
@@ -290,9 +329,6 @@ __attribute__((section(".ramfunc"))) static bool usbd_reset(void) {
             break;
         }
         }
-
-        endpoint_register |= i; // endpoint address
-        USBD_EPR(i)->EPR = endpoint_register;
     }
 
     // set interrupts to be generated
@@ -312,14 +348,15 @@ __attribute__((section(".ramfunc"))) static bool usbd_reset(void) {
 // USBD IRQ callbacks
 __attribute__((section(".ramfunc"))) static void usbd_irq_cb(void) {
     register uint8_t endpoint = USBD->ISTR & USBD_ISTR_EP_ID_MASK;
-    register uint16_t endpoint_register = USBD_EPR(endpoint)->EPR;
+    USBD->ISTR &= ~(USBD_ISTR_EP_ID_MASK);
 
     // figure out which IRQ was called
     // PROCESSING ORDER IS IMPORTANT!
 
     if ((USBD->ISTR & USBD_ISTR_SUSP) > 0) {
         // suspend interrupt received: ESOF for 3ms
-        usbd_suspended_state = usbd_state;
+        if (usbd_state != USB_DEVICE_STATE_SUSPENDED)
+            usbd_suspended_state = usbd_state;
         usbd_state = USB_DEVICE_STATE_SUSPENDED;
         USBD->CNTR |= (USBD_CNTR_FSUSP | USBD_CNTR_LPMODE);
         USBD->ISTR &= ~(USBD_ISTR_SUSP);
@@ -327,7 +364,8 @@ __attribute__((section(".ramfunc"))) static void usbd_irq_cb(void) {
 
     if ((USBD->ISTR & USBD_ISTR_WKUP) > 0) {
         // wakeup frame received
-        usbd_state = usbd_suspended_state;
+        if (usbd_state == USB_DEVICE_STATE_SUSPENDED)
+            usbd_state = usbd_suspended_state;
         USBD->CNTR &= ~(USBD_CNTR_FSUSP | USBD_CNTR_LPMODE);
         USBD->ISTR &= ~(USBD_ISTR_WKUP);
     }
@@ -366,28 +404,24 @@ __attribute__((section(".ramfunc"))) static void usbd_irq_cb(void) {
         // transfer completed successfully
         // be careful updating endpoint register, because some bits are toggles
         // run endpoint's callbacks if set
-        if ((endpoint_register & USBD_EPR_CTR_RX) != 0) {
-            uint16_t count = (USBD_BTABLE_EP(0)->COUNT_RX & 0x1FF);
+        if ((USBD_EPR(endpoint)->EPR & USBD_EPR_CTR_RX) != 0) {
+            uint16_t count = (USBD_BTABLE_EP(endpoint)->COUNT_RX & 0x1FF);
             if (usbd_endpoints[endpoint] != NULL) {
                 if (usbd_endpoints[endpoint]->rxd_buf >= usbd_sram_shadow && (usbd_endpoints[endpoint]->rxd_buf + count) < (usbd_sram_shadow + 512))
                     usbd_sram2shadow(usbd_endpoints[endpoint]->rxd_buf, usbd_endpoints[endpoint]->frame_maxlen);
                 if (usbd_endpoints[endpoint]->out_xfer != NULL)
                     (usbd_endpoints[endpoint]->out_xfer)(usbd_endpoints[endpoint]->rxd_buf, count);
             }
-            endpoint_register &= ~(USBD_EPR_CTR_RX);
+            // clear CTR_RX bit
+            USBD_EPR(endpoint)->EPR = (USBD_EPR_INVARIANT(endpoint) & ~(USBD_EPR_CTR_RX));
         }
-        if ((endpoint_register & USBD_EPR_CTR_TX) != 0) {
+        if ((USBD_EPR(endpoint)->EPR & USBD_EPR_CTR_TX) != 0) {
             if (usbd_endpoints[endpoint] != NULL) {
                 if (usbd_endpoints[endpoint]->in_xfer != NULL)
                     (usbd_endpoints[endpoint]->in_xfer)();
             }
-            endpoint_register &= ~(USBD_EPR_CTR_TX);
+            USBD_EPR(endpoint)->EPR = (USBD_EPR_INVARIANT(endpoint) & ~(USBD_EPR_CTR_TX));
         }
-
-        // don't toggle the toggle-bits
-        endpoint_register &= ~(USBD_EPR_DTOG_RX | USBD_EPR_DTOG_TX | USBD_EPR_STAT_RX_MASK | USBD_EPR_STAT_TX_MASK);
-
-        USBD_EPR(endpoint)->EPR = endpoint_register;
 
         USBD->ISTR &= ~(USBD_ISTR_CTR);
     }
@@ -408,26 +442,34 @@ __attribute__((section(".ramfunc"))) static void usbd_lp_irq_cb(void) {
 }
 
 // endpoint->txd_buf must be populated before calling
-bool usbd_transmit(usb_endpoint_t *endpoint, uint16_t len) {}
+bool usbd_transmit(usb_endpoint_t *endpoint, uint16_t len) {
+    usbd_shadow2sram(endpoint->txd_buf, endpoint->frame_maxlen);
+    USBD_BTABLE_EP(endpoint->ep_num)->COUNT_TX = (uint16_t)MIN((int32_t)len, (int32_t)endpoint->frame_maxlen);
+    USBD_EPR(endpoint->ep_num)->EPR = USBD_EPR_STAT_TX(endpoint->ep_num, USBD_EPR_STAT_TX_ACK);
+}
 
 void usbd_ep0_handle_setup(PUSB_SETUP_REQ usb_setup_request) {
+    bool setup_ok = false;
     switch (usb_setup_request->bRequest) {
     case USB_CLEAR_FEATURE: {
         if (usb_setup_request->bRequestType > 2)
             break;
         // handle USB_CLEAR_FEATURE
+        setup_ok = true;
         break;
     }
     case USB_GET_CONFIGURATION: {
         if (usb_setup_request->bRequestType != 0b10000000)
             break;
         // handle USB_GET_CONFIGURATION
+        setup_ok = true;
         break;
     }
     case USB_GET_DESCRIPTOR: {
         // sanity-check: GET_DESCRIPTOR is only valid for device-to-host, standard, device
         if (usb_setup_request->bRequestType != 0b10000000)
             break;
+        setup_ok = true;
         uint8_t descriptor_type = (uint8_t)((uint16_t)(usb_setup_request->wValue & 0xFF00) >> 8);
         uint8_t descriptor_index = (uint8_t)((uint16_t)(usb_setup_request->wValue & 0x00FF));
 
@@ -438,30 +480,24 @@ void usbd_ep0_handle_setup(PUSB_SETUP_REQ usb_setup_request) {
             break;
         }
         default: {
-            __NOP();
+            setup_ok = false;
             break;
         }
         }
         break;
     }
     case USB_GET_INTERFACE: {
-        __NOP();
-        __NOP();
         break;
     }
     case USB_GET_STATUS: {
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
         break;
     }
     default: {
-        __NOP();
         break;
     }
     }
+    if (setup_ok == false)
+        usbd_reset();
 }
 
 void usbd_ep0_task(void *pvParameters) {
@@ -482,6 +518,7 @@ void usbd_ep0_task(void *pvParameters) {
 
         // TX data interrupt
         if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_TX) != 0) {
+            __NOP();
         }
 
         // RX data interrupt
@@ -495,28 +532,40 @@ void usbd_ep0_task(void *pvParameters) {
                     // reset indentation!
                     usbd_ep0_handle_setup((PUSB_SETUP_REQ)buf);
             }
+        }
 
-            // ERR interrupt
-            if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_ERR) != 0) {
-            }
+        // ERR interrupt
+        if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_ERR) != 0) {
+            __NOP();
+        }
 
-            // buffer-overflow interrupt
-            if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_OVF) != 0) {
-            }
+        // buffer-overflow interrupt
+        if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_OVF) != 0) {
+            __NOP();
+        }
 
-            // start of frame interrupt
-            if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_SOF) != 0) {
-            }
+        // start of frame interrupt
+        if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_SOF) != 0) {
+            __NOP();
+        }
 
-            // start of frame error interrupt
-            if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_ESOF) != 0) {
-            }
+        // start of frame error interrupt
+        if ((wakeup_status & EP0_WAKEUP_REASON_IRQ_ESOF) != 0) {
+            __NOP();
         }
     }
 }
 
 // flag for usb device init completion
 static bool usb_device_init_complete = false;
+
+// init USBD peripheral
+//
+// this MUST be called before any endpoints are added using
+// usbd_register_endpoint() because it zeroes the USBD SRAM.
+//
+// you must also enable CAN1/CAN2 before enabling USBD, as this only checks
+// once during init.
 __attribute__((section(".slowfunc"))) bool usb_device_init(void) {
     // ensure init only runs once, turn it into a no-op if called again
     if (usb_device_init_complete == true)
@@ -566,6 +615,13 @@ __attribute__((section(".slowfunc"))) bool usb_device_init(void) {
     // enable internal USBD pull-up
     EXTEN->EXTEN_CTR |= EXTEN_USBD_PU_EN;
 
+    // detect RCC status of CAN1/CAN2
+    // make sure that CAN1/2 is enabled BEFORE USBD!
+    if ((RCC->APB1PCENR & RCC_APB1Periph_CAN1) != 0)
+        can1_enabled = true;
+    if ((RCC->APB1PCENR & RCC_APB1Periph_CAN2) != 0)
+        can2_enabled = true;
+
     // unmask clock and set/clear peripheral reset
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
     RCC_APB1PeriphResetCmd(RCC_APB1Periph_USB, ENABLE);
@@ -576,19 +632,25 @@ __attribute__((section(".slowfunc"))) bool usb_device_init(void) {
     USBD->CNTR = USBD_CNTR_FRES;
 
     // TODO: need to wait for 100ms here? Rust implementation does...
+    /*
     Delay_Init();
     Delay_Ms(100);
-
-    // detect RCC status of CAN1/CAN2
-    // make sure that CAN1/2 is enabled BEFORE USBD!
-    if ((RCC->APB1PCENR & RCC_APB1Periph_CAN1) != 0)
-        can1_enabled = true;
-    if ((RCC->APB1PCENR & RCC_APB1Periph_CAN2) != 0)
-        can2_enabled = true;
+    */
 
     // set USBD_BTABLE offset address relative to 0x40006000
     // entire BTABLE is 64 bytes of SRAM, but 128 bytes of address
     USBD->BTABLE = 0;
+
+    // clear entire USBD SRAM
+    memset32(USBD_CAN1_CAN2_SRAM_BASE, 0x00, 512);
+    if (can2_enabled == false) {
+        if (memset32(USBD_CAN1_CAN2_SRAM_BASE + 512, 0x00, 256) == NULL)
+            return false;
+    }
+    if (can1_enabled == false) {
+        if (memset32(USBD_CAN1_CAN2_SRAM_BASE + 768, 0x00, 256) == NULL)
+            return false;
+    }
 
     if (usbd_register_endpoint(&usbd_ep0_endpoint) == false)
         return false;
