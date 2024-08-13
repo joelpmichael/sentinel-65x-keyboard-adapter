@@ -446,6 +446,7 @@ extern "C" {
 #define USBD_BTABLE_BASE (USBD_CAN1_CAN2_SRAM_BASE)
 #define USBD_BTABLE_EP(x) ((USBD_BTABLE_TypeDef *)(USBD_BTABLE_BASE + (x * 16))) // 32-bit absolute memory address
 #define USBD_BTABLE_END (USBD->BTABLE + (8 * 8))                                 // 16-bit relative address
+#define USBD_BTABLE_COUNT_RX_MASK 0x3FF
 
 /* R16_USBD_EPR[0:7] */
 #define USBD_EPR(x) ((USBD_EPR_TypeDef *)(USBD_EP_BASE + (x * 4)))

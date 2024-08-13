@@ -31,10 +31,6 @@
 
 #include "custom_host.h"
 #include "ps2_host.h"
-#include "usb_host.h"
-
-#include "usb_device.h"
-#include "usb_device_cdc-acm.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -162,15 +158,8 @@ __attribute__((section(".slowfunc"))) int main(void) {
 #endif
 
     // USB device setup for config interface
-    // FIXME - this needs a hardware hack on the CH32V203 dev board to make it work!
-    if (usb_device_init() == false)
-        s65x_controller_post_fail();
-
     // USB device setup for CDC-ACM interface
-    if (usb_device_cdcacm_init() == false)
-        s65x_controller_post_fail();
-
-    // Delay_Init();
+    // TODO: migrate to TinyUSB stack!
 
     vTaskStartScheduler();
 
