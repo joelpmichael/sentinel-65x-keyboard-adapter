@@ -9,8 +9,6 @@
 
 #include "custom_host.h"
 #include "custom_pad.h"
-#include "usb_host.h"
-#include "usb_host_pad.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

@@ -11,8 +11,6 @@
 #include "custom_mouse.h"
 #include "ps2_host.h"
 #include "ps2_host_mouse.h"
-#include "usb_host.h"
-#include "usb_host_mouse.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

@@ -128,8 +128,6 @@ __attribute__((section(".slowfunc"))) int main(void) {
 #endif
 #ifdef HAS_USB_HOST
     // USB host controller setup
-    if (usb_host_init() == false)
-        s65x_controller_post_fail();
 #endif
 
 // only enable custom host init if a custom device will be used
