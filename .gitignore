@@ -8,6 +8,11 @@ hardware/*/production/*
 
 # In THIS house, we recognise MacOS likes to leave little poos everywhere
 **/.DS_Store
+**/._*
+
+# temporary local hacks
+firmware/c_orig
+firmware/rust
 
 # KiCad backup & autosave files
 **/*-backups
