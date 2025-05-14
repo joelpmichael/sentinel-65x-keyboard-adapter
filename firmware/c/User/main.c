@@ -31,9 +31,39 @@
 
 #include "custom_host.h"
 #include "ps2_host.h"
+#include "usb_host.h"
+
+#include "usb_device.h"
 
 #include "FreeRTOS.h"
+#include "debug.h"
 #include "task.h"
+
+#include "tusb.h"
+
+// Invoked when received report from device via interrupt endpoint
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *report, uint16_t len) {
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+
+    switch (itf_protocol) {
+    case HID_ITF_PROTOCOL_KEYBOARD:
+        TU_LOG2("HID receive boot keyboard report\r\n");
+        break;
+
+    case HID_ITF_PROTOCOL_MOUSE:
+        TU_LOG2("HID receive boot mouse report\r\n");
+        break;
+
+    default:
+        // Generic report requires matching ReportID and contents with previous parsed report info
+        break;
+    }
+
+    // continue to request to receive report
+    if (!tuh_hid_receive_report(dev_addr, instance)) {
+        printf("Error: cannot request to receive report\r\n");
+    }
+}
 
 void gpio_clock_init(void) __attribute__((section(".slowfunc")));
 void gpio_clock_init(void) {
@@ -59,14 +89,15 @@ void gpio_clock_init(void) {
  *
  * @return  none
  */
-__attribute__((section(".slowfunc"))) int main(void) {
-    // Clock setup
+int main(void) {
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     // core clock is already set during pre-main() code
     // SystemCoreClockUpdate() updates a variable used throughout the SDK
     SystemCoreClockUpdate();
 
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    // enable "Flash Enhanced Read Mode"
+    // FLASH_Enhance_Mode(ENABLE);
 
     // shared peripheral initial setup
     gpio_clock_init();
@@ -87,7 +118,7 @@ __attribute__((section(".slowfunc"))) int main(void) {
     if (s65x_controller_init() == false)
         s65x_controller_post_fail();
 
-        // only enable PS/2 init if a PS/2 device will be used
+    // only enable PS/2 init if a PS/2 device will be used
 #ifdef HAS_PS2_HOST
 #undef HAS_PS2_HOST
 #endif
@@ -105,29 +136,6 @@ __attribute__((section(".slowfunc"))) int main(void) {
     // PS/2 host GPIO setup
     if (ps2_host_init() == false)
         s65x_controller_post_fail();
-#endif
-
-// only enable USB host init if a USB device will be used
-#ifdef HAS_USB_HOST
-#undef HAS_USB_HOST
-#endif
-#ifdef HAS_USB_KEYBOARD
-#ifndef HAS_USB_HOST
-#define HAS_USB_HOST
-#endif
-#endif
-#ifdef HAS_USB_MOUSE
-#ifndef HAS_USB_HOST
-#define HAS_USB_HOST
-#endif
-#endif
-#ifdef HAS_USB_PAD
-#ifndef HAS_USB_HOST
-#define HAS_USB_HOST
-#endif
-#endif
-#ifdef HAS_USB_HOST
-    // USB host controller setup
 #endif
 
 // only enable custom host init if a custom device will be used
@@ -155,9 +163,34 @@ __attribute__((section(".slowfunc"))) int main(void) {
         s65x_controller_post_fail();
 #endif
 
+// only enable USB host init if a USB device will be used
+#ifdef HAS_USB_HOST
+#undef HAS_USB_HOST
+#endif
+#ifdef HAS_USB_KEYBOARD
+#ifndef HAS_USB_HOST
+#define HAS_USB_HOST
+#endif
+#endif
+#ifdef HAS_USB_MOUSE
+#ifndef HAS_USB_HOST
+#define HAS_USB_HOST
+#endif
+#endif
+#ifdef HAS_USB_PAD
+#ifndef HAS_USB_HOST
+#define HAS_USB_HOST
+#endif
+#endif
+#ifdef HAS_USB_HOST
+    // USB host controller setup
+    if (usb_host_init() == false)
+        s65x_controller_post_fail();
+#endif
+
     // USB device setup for config interface
-    // USB device setup for CDC-ACM interface
-    // TODO: migrate to TinyUSB stack!
+    if (usb_device_init() == false)
+        s65x_controller_post_fail();
 
     vTaskStartScheduler();
 
@@ -166,8 +199,30 @@ __attribute__((section(".slowfunc"))) int main(void) {
     }
 }
 
+// static memory allocations
+static StaticTask_t xIdleTaskTCB, xTimerTaskTCB;
+static StackType_t xIdleTaskStack[configMINIMAL_STACK_SIZE];
+static StackType_t xTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
+
+__attribute__((section(".slowfunc"))) void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
+                                                                         StackType_t **ppxIdleTaskStackBuffer,
+                                                                         uint32_t *pulIdleTaskStackSize) {
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+    *ppxIdleTaskStackBuffer = &xIdleTaskStack[0];
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+__attribute__((section(".slowfunc"))) void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
+                                                                          StackType_t **ppxTimerTaskStackBuffer,
+                                                                          uint32_t *pulTimerTaskStackSize) {
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
+    *ppxTimerTaskStackBuffer = &xTimerTaskStack[0];
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}
+
 // idle hook, just wait for interrupts
-__attribute__((section(".ramfunc"))) void vApplicationIdleHook(void) {
+__attribute__((section(".ramfunc"))) void
+vApplicationIdleHook(void) {
     __WFI();
 }
 
@@ -180,13 +235,11 @@ __attribute__((section(".slowfunc"))) void vApplicationStackOverflowHook(TaskHan
 }
 
 // custom malloc/free overrides, use FreeRTOS to malloc/free
-__attribute__((section(".ramfunc"))) inline void free(void *ptr) {
-    if (ptr == NULL)
-        return;
+__attribute__((always_inline)) inline void free(void *ptr) {
     vPortFree(ptr);
 }
 
-__attribute__((section(".ramfunc"), malloc, malloc(free))) inline void *malloc(size_t size) {
+__attribute__((always_inline, malloc)) inline void *malloc(size_t size) {
     if (size == 0)
         return NULL;
     return pvPortMalloc(size);

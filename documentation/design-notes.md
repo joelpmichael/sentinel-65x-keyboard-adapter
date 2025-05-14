@@ -159,4 +159,8 @@ Use DPDT slide switch to pull Boot0 and Boot1 to desired state.
 
 ### USB Host
 
-Ugh, looks like I'll need to complete most of this code in both C and Rust.
+TinyUSB to the rescue! This one is a fork that has CH32V203 support added...
+
+### USB Device
+
+TinyUSB to the rescue! Mainline support for CH32V203 USBD.

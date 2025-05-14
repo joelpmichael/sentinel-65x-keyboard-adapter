@@ -11,26 +11,27 @@
  *******************************************************************************/
 #include "ch32v20x_it.h"
 #include "ch32v20x_conf.h"
+#include "tusb.h"
 
 // All interrupt handler names can be found in startup_ch32v20x_*.S
 
-void NMI_Handler(void) __attribute__((interrupt(), section(".slowfunc")));
-void HardFault_Handler(void) __attribute__((interrupt(), section(".slowfunc"), noreturn));
+void NMI_Handler(void) __attribute__((interrupt(), used, section(".slowfunc")));
+void HardFault_Handler(void) __attribute__((interrupt(), used, section(".slowfunc")));
 
-void EXTI0_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void EXTI1_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void EXTI2_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void EXTI3_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void EXTI4_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void EXTI9_5_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void EXTI15_10_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void run_exti_handler(uint8_t exti_num) __attribute__((section(".ramfunc")));
+void EXTI0_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void EXTI1_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void EXTI2_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void EXTI3_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void EXTI4_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void EXTI9_5_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void EXTI15_10_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void run_exti_handler(uint8_t exti_num) __attribute__((section(".ramfunc"), used));
 
-void USB_HP_CAN1_TX_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void USB_LP_CAN1_RX0_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void USBWakeUp_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void USBFS_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
-void USBFSWakeUp_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc")));
+void USB_HP_CAN1_TX_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void USB_LP_CAN1_RX0_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void USBWakeUp_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void USBFS_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
+void USBFSWakeUp_IRQHandler(void) __attribute__((interrupt(), used, section(".ramfunc")));
 
 /*********************************************************************
  * @fn      NMI_Handler
@@ -40,6 +41,12 @@ void USBFSWakeUp_IRQHandler(void) __attribute__((interrupt(), section(".ramfunc"
  * @return  none
  */
 void NMI_Handler(void) {
+#ifdef DEBUG
+    // drop to debugger in debug builds
+    __EBREAK();
+#endif
+
+    NVIC_SystemReset();
     while (1) {
     }
 }
@@ -52,6 +59,12 @@ void NMI_Handler(void) {
  * @return    None
  */
 void HardFault_Handler(void) {
+#ifdef DEBUG
+    // drop to debugger in debug builds
+    __EBREAK();
+#endif
+
+    NVIC_SystemReset();
     while (1) {
     }
 }
@@ -66,20 +79,15 @@ void HardFault_Handler(void) {
 static exti_handler exti_handlers[EXTI_COUNT] = {NULL};
 
 // set EXTI handler for EXTI number
-void set_exti_handler(uint8_t exti_num, exti_handler handler) {
+__attribute__((section(".slowfunc"))) void set_exti_handler(uint8_t exti_num, exti_handler handler) {
     if (exti_num >= EXTI_COUNT)
         return;
     exti_handlers[exti_num] = handler;
 }
 
-// clear EXTI handler for EXTI number by setting to NULL
-void clear_exti_handler(uint8_t exti_num) {
-    set_exti_handler(exti_num, NULL);
-}
-
 // run EXTI handler callback if set
 // called from IRQ handler
-void run_exti_handler(uint8_t exti_num) {
+__attribute__((section(".ramfunc"))) void run_exti_handler(uint8_t exti_num) {
     // ensure not trying to run an undefined EXTI
     if (exti_num >= EXTI_COUNT)
         return;
@@ -103,7 +111,7 @@ void run_exti_handler(uint8_t exti_num) {
  *
  * @return  none
  */
-void EXTI0_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI0_IRQHandler(void) {
     run_exti_handler(0);
     NVIC_ClearPendingIRQ(EXTI0_IRQn);
 }
@@ -115,7 +123,7 @@ void EXTI0_IRQHandler(void) {
  *
  * @return  none
  */
-void EXTI1_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI1_IRQHandler(void) {
     run_exti_handler(1);
     NVIC_ClearPendingIRQ(EXTI1_IRQn);
 }
@@ -127,7 +135,7 @@ void EXTI1_IRQHandler(void) {
  *
  * @return  none
  */
-void EXTI2_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI2_IRQHandler(void) {
     run_exti_handler(2);
     NVIC_ClearPendingIRQ(EXTI2_IRQn);
 }
@@ -139,7 +147,7 @@ void EXTI2_IRQHandler(void) {
  *
  * @return  none
  */
-void EXTI3_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI3_IRQHandler(void) {
     run_exti_handler(3);
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
 }
@@ -151,7 +159,7 @@ void EXTI3_IRQHandler(void) {
  *
  * @return  none
  */
-void EXTI4_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI4_IRQHandler(void) {
     run_exti_handler(4);
     NVIC_ClearPendingIRQ(EXTI4_IRQn);
 }
@@ -163,7 +171,7 @@ void EXTI4_IRQHandler(void) {
  *
  * @return  none
  */
-void EXTI9_5_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI9_5_IRQHandler(void) {
     for (uint8_t i = 5; i <= 9; i++) {
         run_exti_handler(i);
     }
@@ -177,80 +185,48 @@ void EXTI9_5_IRQHandler(void) {
  *
  * @return  none
  */
-void EXTI15_10_IRQHandler(void) {
+__attribute__((section(".ramfunc"))) void EXTI15_10_IRQHandler(void) {
     for (uint8_t i = 10; i <= 15; i++) {
         run_exti_handler(i);
     }
     NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
 }
 
-// USBD interrupt handlers
-static usbhp_can1tx_handler usb_hp_can1_tx_handler = NULL;
-void set_usbhp_can1tx_handler(usbhp_can1tx_handler handler) {
-    usb_hp_can1_tx_handler = handler;
-}
-void clear_usbhp_can1tx_handler(void) {
-    set_usbhp_can1tx_handler(NULL);
-}
-
-static usblp_can1rx0_handler usb_lp_can1_rx0_handler = NULL;
-void set_usblp_can1rx0_handler(usblp_can1rx0_handler handler) {
-    usb_lp_can1_rx0_handler = handler;
-}
-void clear_usblp_can1rx0_handler(void) {
-    set_usblp_can1rx0_handler(NULL);
-}
-
-static usbwkp_handler usb_wkp_handler = NULL;
-void set_usbwkp_handler(usbwkp_handler handler) {
-    usb_wkp_handler = handler;
-}
-void clear_usbwkp_handler(void) {
-    set_usbwkp_handler(NULL);
-}
-
-static usbfs_handler usb_fs_handler = NULL;
-void set_usbfs_handler(usbfs_handler handler) {
-    usb_fs_handler = handler;
-}
-void clear_usbfs_handler(void) {
-    set_usbfs_handler(NULL);
-}
-
-static usbfswkp_handler usb_fs_wkp_handler = NULL;
-void set_usbfswkp_handler(usbfswkp_handler handler) {
-    usb_fs_wkp_handler = handler;
-}
-void clear_usbfswkp_handler(void) {
-    set_usbfswkp_handler(NULL);
-}
-
-void USB_HP_CAN1_TX_IRQHandler(void) {
-    if (usb_hp_can1_tx_handler != NULL)
-        (usb_hp_can1_tx_handler)();
+__attribute__((section(".ramfunc"))) void USB_HP_CAN1_TX_IRQHandler(void) {
+#if CFG_TUD_WCH_USBIP_FSDEV
+    tud_int_handler(BOARD_TUD_RHPORT);
+#endif
     NVIC_ClearPendingIRQ(USB_HP_CAN1_TX_IRQn);
 }
 
-void USB_LP_CAN1_RX0_IRQHandler(void) {
-    if (usb_lp_can1_rx0_handler != NULL)
-        (usb_lp_can1_rx0_handler)();
+__attribute__((section(".ramfunc"))) void USB_LP_CAN1_RX0_IRQHandler(void) {
+#if CFG_TUD_WCH_USBIP_FSDEV
+    tud_int_handler(BOARD_TUD_RHPORT);
+#endif
     NVIC_ClearPendingIRQ(USB_LP_CAN1_RX0_IRQn);
 }
 
-void USBWakeUp_IRQHandler(void) {
-    if (usb_wkp_handler != NULL)
-        (usb_wkp_handler)();
+__attribute__((section(".ramfunc"))) void USBWakeUp_IRQHandler(void) {
+#if CFG_TUD_WCH_USBIP_FSDEV
+    tud_int_handler(BOARD_TUD_RHPORT);
+#endif
     NVIC_ClearPendingIRQ(USBWakeUp_IRQn);
 }
 
-void USBFS_IRQHandler(void) {
-    if (usb_fs_handler != NULL)
-        (usb_fs_handler)();
+__attribute__((section(".ramfunc"))) void USBFS_IRQHandler(void) {
+#if CFG_TUD_WCH_USBIP_USBFS
+    tud_int_handler(BOARD_TUD_RHPORT);
+#elif CFG_TUH_WCH_USBIP_USBFS
+    tuh_int_handler(BOARD_TUH_RHPORT);
+#endif
     NVIC_ClearPendingIRQ(USBFS_IRQn);
 }
 
-void USBFSWakeUp_IRQHandler(void) {
-    if (usb_fs_wkp_handler != NULL)
-        (usb_fs_wkp_handler)();
+__attribute__((section(".ramfunc"))) void USBFSWakeUp_IRQHandler(void) {
+#if CFG_TUD_WCH_USBIP_USBFS
+    tud_int_handler(BOARD_TUD_RHPORT);
+#elif CFG_TUH_WCH_USBIP_USBFS
+    tuh_int_handler(BOARD_TUH_RHPORT);
+#endif
     NVIC_ClearPendingIRQ(USBFSWakeUp_IRQn);
 }

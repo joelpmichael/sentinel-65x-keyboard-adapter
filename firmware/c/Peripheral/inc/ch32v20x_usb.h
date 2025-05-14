@@ -28,10 +28,10 @@ extern "C" {
 /*******************************************************************************/
 /* USB Communication Related Macro Definition */
 #ifndef DEFAULT_ENDP0_SIZE
-#define DEFAULT_ENDP0_SIZE 8 // default maximum packet size for endpoint 0
+#define DEFAULT_ENDP0_SIZE 8  // default maximum packet size for endpoint 0
 #endif
 #ifndef MAX_PACKET_SIZE
-#define MAX_PACKET_SIZE 64 // maximum packet size
+#define MAX_PACKET_SIZE 64  // maximum packet size
 #endif
 
 /* USB PID */
@@ -210,6 +210,7 @@ extern "C" {
 #define USB_BO_CSW_SIG3 0x53
 #endif
 
+
 /*******************************************************************************/
 /* USBFS Related Register Macro Definition */
 
@@ -251,20 +252,20 @@ extern "C" {
 #define USBFS_UMS_DEV_ATTACH 0x01
 
 /* R8_USB_INT_FG */
-#define USBFS_U_IS_NAK 0x80     // RO, indicate current USB transfer is NAK received
-#define USBFS_U_TOG_OK 0x40     // RO, indicate current USB transfer toggle is OK
-#define USBFS_U_SIE_FREE 0x20   // RO, indicate USB SIE free status
-#define USBFS_UIF_FIFO_OV 0x10  // FIFO overflow interrupt flag for USB, direct bit address clear or write 1 to clear
-#define USBFS_UIF_HST_SOF 0x08  // host SOF timer interrupt flag for USB host, direct bit address clear or write 1 to clear
-#define USBFS_UIF_SUSPEND 0x04  // USB suspend or resume event interrupt flag, direct bit address clear or write 1 to clear
-#define USBFS_UIF_TRANSFER 0x02 // USB transfer completion interrupt flag, direct bit address clear or write 1 to clear
-#define USBFS_UIF_DETECT 0x01   // device detected event interrupt flag for USB host mode, direct bit address clear or write 1 to clear
-#define USBFS_UIF_BUS_RST 0x01  // bus reset event interrupt flag for USB device mode, direct bit address clear or write 1 to clear
+#define USBFS_U_IS_NAK 0x80      // RO, indicate current USB transfer is NAK received
+#define USBFS_U_TOG_OK 0x40      // RO, indicate current USB transfer toggle is OK
+#define USBFS_U_SIE_FREE 0x20    // RO, indicate USB SIE free status
+#define USBFS_UIF_FIFO_OV 0x10   // FIFO overflow interrupt flag for USB, direct bit address clear or write 1 to clear
+#define USBFS_UIF_HST_SOF 0x08   // host SOF timer interrupt flag for USB host, direct bit address clear or write 1 to clear
+#define USBFS_UIF_SUSPEND 0x04   // USB suspend or resume event interrupt flag, direct bit address clear or write 1 to clear
+#define USBFS_UIF_TRANSFER 0x02  // USB transfer completion interrupt flag, direct bit address clear or write 1 to clear
+#define USBFS_UIF_DETECT 0x01    // device detected event interrupt flag for USB host mode, direct bit address clear or write 1 to clear
+#define USBFS_UIF_BUS_RST 0x01   // bus reset event interrupt flag for USB device mode, direct bit address clear or write 1 to clear
 
 /* R8_USB_INT_ST */
-#define USBFS_UIS_IS_NAK 0x80     // RO, indicate current USB transfer is NAK received for USB device mode
-#define USBFS_UIS_TOG_OK 0x40     // RO, indicate current USB transfer toggle is OK
-#define USBFS_UIS_TOKEN_MASK 0x30 // RO, bit mask of current token PID code received for USB device mode
+#define USBFS_UIS_IS_NAK 0x80      // RO, indicate current USB transfer is NAK received for USB device mode
+#define USBFS_UIS_TOG_OK 0x40      // RO, indicate current USB transfer toggle is OK
+#define USBFS_UIS_TOKEN_MASK 0x30  // RO, bit mask of current token PID code received for USB device mode
 #define USBFS_UIS_TOKEN_OUT 0x00
 #define USBFS_UIS_TOKEN_IN 0x20
 #define USBFS_UIS_TOKEN_SETUP 0x30
@@ -272,8 +273,8 @@ extern "C" {
 //   00: OUT token PID received
 //   10: IN token PID received
 //   11: SETUP token PID received
-#define USBFS_UIS_ENDP_MASK 0x0F  // RO, bit mask of current transfer endpoint number for USB device mode
-#define USBFS_UIS_H_RES_MASK 0x0F // RO, bit mask of current transfer handshake response for USB host mode: 0000=no response, time out from device, others=handshake response PID received
+#define USBFS_UIS_ENDP_MASK 0x0F   // RO, bit mask of current transfer endpoint number for USB device mode
+#define USBFS_UIS_H_RES_MASK 0x0F  // RO, bit mask of current transfer handshake response for USB host mode: 0000=no response, time out from device, others=handshake response PID received
 
 /* R32_USB_OTG_CR */
 #define USBFS_CR_SESS_VTH 0x20
@@ -290,46 +291,46 @@ extern "C" {
 #define USBFS_SR_VBUS_VLD 0x01
 
 /* R8_UDEV_CTRL */
-#define USBFS_UD_PD_DIS 0x80    // disable USB UDP/UDM pulldown resistance: 0=enable pulldown, 1=disable
-#define USBFS_UD_DP_PIN 0x20    // ReadOnly: indicate current UDP pin level
-#define USBFS_UD_DM_PIN 0x10    // ReadOnly: indicate current UDM pin level
-#define USBFS_UD_LOW_SPEED 0x04 // enable USB physical port low speed: 0=full speed, 1=low speed
-#define USBFS_UD_GP_BIT 0x02    // general purpose bit
-#define USBFS_UD_PORT_EN 0x01   // enable USB physical port I/O: 0=disable, 1=enable
+#define USBFS_UD_PD_DIS 0x80     // disable USB UDP/UDM pulldown resistance: 0=enable pulldown, 1=disable
+#define USBFS_UD_DP_PIN 0x20     // ReadOnly: indicate current UDP pin level
+#define USBFS_UD_DM_PIN 0x10     // ReadOnly: indicate current UDM pin level
+#define USBFS_UD_LOW_SPEED 0x04  // enable USB physical port low speed: 0=full speed, 1=low speed
+#define USBFS_UD_GP_BIT 0x02     // general purpose bit
+#define USBFS_UD_PORT_EN 0x01    // enable USB physical port I/O: 0=disable, 1=enable
 
 /* R8_UEP4_1_MOD */
-#define USBFS_UEP1_RX_EN 0x80   // enable USB endpoint 1 receiving (OUT)
-#define USBFS_UEP1_TX_EN 0x40   // enable USB endpoint 1 transmittal (IN)
-#define USBFS_UEP1_BUF_MOD 0x10 // buffer mode of USB endpoint 1
-#define USBFS_UEP4_RX_EN 0x08   // enable USB endpoint 4 receiving (OUT)
-#define USBFS_UEP4_TX_EN 0x04   // enable USB endpoint 4 transmittal (IN)
+#define USBFS_UEP1_RX_EN 0x80    // enable USB endpoint 1 receiving (OUT)
+#define USBFS_UEP1_TX_EN 0x40    // enable USB endpoint 1 transmittal (IN)
+#define USBFS_UEP1_BUF_MOD 0x10  // buffer mode of USB endpoint 1
+#define USBFS_UEP4_RX_EN 0x08    // enable USB endpoint 4 receiving (OUT)
+#define USBFS_UEP4_TX_EN 0x04    // enable USB endpoint 4 transmittal (IN)
 #define USBFS_UEP4_BUF_MOD 0x01
 
 /* R8_UEP2_3_MOD */
-#define USBFS_UEP3_RX_EN 0x80   // enable USB endpoint 3 receiving (OUT)
-#define USBFS_UEP3_TX_EN 0x40   // enable USB endpoint 3 transmittal (IN)
-#define USBFS_UEP3_BUF_MOD 0x10 // buffer mode of USB endpoint 3
-#define USBFS_UEP2_RX_EN 0x08   // enable USB endpoint 2 receiving (OUT)
-#define USBFS_UEP2_TX_EN 0x04   // enable USB endpoint 2 transmittal (IN)
-#define USBFS_UEP2_BUF_MOD 0x01 // buffer mode of USB endpoint 2
+#define USBFS_UEP3_RX_EN 0x80    // enable USB endpoint 3 receiving (OUT)
+#define USBFS_UEP3_TX_EN 0x40    // enable USB endpoint 3 transmittal (IN)
+#define USBFS_UEP3_BUF_MOD 0x10  // buffer mode of USB endpoint 3
+#define USBFS_UEP2_RX_EN 0x08    // enable USB endpoint 2 receiving (OUT)
+#define USBFS_UEP2_TX_EN 0x04    // enable USB endpoint 2 transmittal (IN)
+#define USBFS_UEP2_BUF_MOD 0x01  // buffer mode of USB endpoint 2
 
 /* R8_UEP5_6_MOD */
-#define USBFS_UEP6_RX_EN 0x80   // enable USB endpoint 6 receiving (OUT)
-#define USBFS_UEP6_TX_EN 0x40   // enable USB endpoint 6 transmittal (IN)
-#define USBFS_UEP6_BUF_MOD 0x10 // buffer mode of USB endpoint 6
-#define USBFS_UEP5_RX_EN 0x08   // enable USB endpoint 5 receiving (OUT)
-#define USBFS_UEP5_TX_EN 0x04   // enable USB endpoint 5 transmittal (IN)
-#define USBFS_UEP5_BUF_MOD 0x01 // buffer mode of USB endpoint 5
+#define USBFS_UEP6_RX_EN 0x80    // enable USB endpoint 6 receiving (OUT)
+#define USBFS_UEP6_TX_EN 0x40    // enable USB endpoint 6 transmittal (IN)
+#define USBFS_UEP6_BUF_MOD 0x10  // buffer mode of USB endpoint 6
+#define USBFS_UEP5_RX_EN 0x08    // enable USB endpoint 5 receiving (OUT)
+#define USBFS_UEP5_TX_EN 0x04    // enable USB endpoint 5 transmittal (IN)
+#define USBFS_UEP5_BUF_MOD 0x01  // buffer mode of USB endpoint 5
 
 /* R8_UEP7_MOD */
-#define USBFS_UEP7_RX_EN 0x08   // enable USB endpoint 7 receiving (OUT)
-#define USBFS_UEP7_TX_EN 0x04   // enable USB endpoint 7 transmittal (IN)
-#define USBFS_UEP7_BUF_MOD 0x01 // buffer mode of USB endpoint 7
+#define USBFS_UEP7_RX_EN 0x08    // enable USB endpoint 7 receiving (OUT)
+#define USBFS_UEP7_TX_EN 0x04    // enable USB endpoint 7 transmittal (IN)
+#define USBFS_UEP7_BUF_MOD 0x01  // buffer mode of USB endpoint 7
 
 /* R8_UEPn_TX_CTRL */
-#define USBFS_UEP_T_AUTO_TOG 0x08 // enable automatic toggle after successful transfer completion on endpoint 1/2/3: 0=manual toggle, 1=automatic toggle
-#define USBFS_UEP_T_TOG 0x04      // prepared data toggle flag of USB endpoint X transmittal (IN): 0=DATA0, 1=DATA1
-#define USBFS_UEP_T_RES_MASK 0x03 // bit mask of handshake response type for USB endpoint X transmittal (IN)
+#define USBFS_UEP_T_AUTO_TOG 0x08  // enable automatic toggle after successful transfer completion on endpoint 1/2/3: 0=manual toggle, 1=automatic toggle
+#define USBFS_UEP_T_TOG 0x04       // prepared data toggle flag of USB endpoint X transmittal (IN): 0=DATA0, 1=DATA1
+#define USBFS_UEP_T_RES_MASK 0x03  // bit mask of handshake response type for USB endpoint X transmittal (IN)
 #define USBFS_UEP_T_RES_ACK 0x00
 #define USBFS_UEP_T_RES_NONE 0x01
 #define USBFS_UEP_T_RES_NAK 0x02
@@ -342,9 +343,9 @@ extern "C" {
 // host aux setup
 
 /* R8_UEPn_RX_CTRL, n=0-7 */
-#define USBFS_UEP_R_AUTO_TOG 0x08 // enable automatic toggle after successful transfer completion on endpoint 1/2/3: 0=manual toggle, 1=automatic toggle
-#define USBFS_UEP_R_TOG 0x04      // expected data toggle flag of USB endpoint X receiving (OUT): 0=DATA0, 1=DATA1
-#define USBFS_UEP_R_RES_MASK 0x03 // bit mask of handshake response type for USB endpoint X receiving (OUT)
+#define USBFS_UEP_R_AUTO_TOG 0x08  // enable automatic toggle after successful transfer completion on endpoint 1/2/3: 0=manual toggle, 1=automatic toggle
+#define USBFS_UEP_R_TOG 0x04       // expected data toggle flag of USB endpoint X receiving (OUT): 0=DATA0, 1=DATA1
+#define USBFS_UEP_R_RES_MASK 0x03  // bit mask of handshake response type for USB endpoint X receiving (OUT)
 #define USBFS_UEP_R_RES_ACK 0x00
 #define USBFS_UEP_R_RES_NONE 0x01
 #define USBFS_UEP_R_RES_NAK 0x02
@@ -356,135 +357,50 @@ extern "C" {
 //   11: STALL (error)
 
 /* R8_UHOST_CTRL */
-#define USBFS_UH_PD_DIS 0x80    // disable USB UDP/UDM pulldown resistance: 0=enable pulldown, 1=disable
-#define USBFS_UH_DP_PIN 0x20    // ReadOnly: indicate current UDP pin level
-#define USBFS_UH_DM_PIN 0x10    // ReadOnly: indicate current UDM pin level
-#define USBFS_UH_LOW_SPEED 0x04 // enable USB port low speed: 0=full speed, 1=low speed
-#define USBFS_UH_BUS_RESET 0x02 // control USB bus reset: 0=normal, 1=force bus reset
-#define USBFS_UH_PORT_EN 0x01   // enable USB port: 0=disable, 1=enable port, automatic disabled if USB device detached
+#define USBFS_UH_PD_DIS 0x80     // disable USB UDP/UDM pulldown resistance: 0=enable pulldown, 1=disable
+#define USBFS_UH_DP_PIN 0x20     // ReadOnly: indicate current UDP pin level
+#define USBFS_UH_DM_PIN 0x10     // ReadOnly: indicate current UDM pin level
+#define USBFS_UH_LOW_SPEED 0x04  // enable USB port low speed: 0=full speed, 1=low speed
+#define USBFS_UH_BUS_RESET 0x02  // control USB bus reset: 0=normal, 1=force bus reset
+#define USBFS_UH_PORT_EN 0x01    // enable USB port: 0=disable, 1=enable port, automatic disabled if USB device detached
 
 /* R32_UH_EP_MOD */
-#define USBFS_UH_EP_TX_EN 0x40    // enable USB host OUT endpoint transmittal
-#define USBFS_UH_EP_TBUF_MOD 0x10 // buffer mode of USB host OUT endpoint
+#define USBFS_UH_EP_TX_EN 0x40     // enable USB host OUT endpoint transmittal
+#define USBFS_UH_EP_TBUF_MOD 0x10  // buffer mode of USB host OUT endpoint
 // bUH_EP_TX_EN & bUH_EP_TBUF_MOD: USB host OUT endpoint buffer mode, buffer start address is UH_TX_DMA
 //   0 x:  disable endpoint and disable buffer
 //   1 0:  64 bytes buffer for transmittal (OUT endpoint)
 //   1 1:  dual 64 bytes buffer by toggle bit bUH_T_TOG selection for transmittal (OUT endpoint), total=128bytes
-#define USBFS_UH_EP_RX_EN 0x08    // enable USB host IN endpoint receiving
-#define USBFS_UH_EP_RBUF_MOD 0x01 // buffer mode of USB host IN endpoint
+#define USBFS_UH_EP_RX_EN 0x08     // enable USB host IN endpoint receiving
+#define USBFS_UH_EP_RBUF_MOD 0x01  // buffer mode of USB host IN endpoint
 // bUH_EP_RX_EN & bUH_EP_RBUF_MOD: USB host IN endpoint buffer mode, buffer start address is UH_RX_DMA
 //   0 x:  disable endpoint and disable buffer
 //   1 0:  64 bytes buffer for receiving (IN endpoint)
 //   1 1:  dual 64 bytes buffer by toggle bit bUH_R_TOG selection for receiving (IN endpoint), total=128bytes
 
 /* R16_UH_SETUP */
-#define USBFS_UH_PRE_PID_EN 0x0400 // USB host PRE PID enable for low speed device via hub
-#define USBFS_UH_SOF_EN 0x0004     // USB host automatic SOF enable
+#define USBFS_UH_PRE_PID_EN 0x0400  // USB host PRE PID enable for low speed device via hub
+#define USBFS_UH_SOF_EN 0x0004      // USB host automatic SOF enable
 
 /* R8_UH_EP_PID */
-#define USBFS_UH_TOKEN_MASK 0xF0 // bit mask of token PID for USB host transfer
-#define USBFS_UH_ENDP_MASK 0x0F  // bit mask of endpoint number for USB host transfer
+#define USBFS_UH_TOKEN_MASK 0xF0  // bit mask of token PID for USB host transfer
+#define USBFS_UH_ENDP_MASK 0x0F   // bit mask of endpoint number for USB host transfer
 
 /* R8_UH_RX_CTRL */
-#define USBFS_UH_R_AUTO_TOG 0x08 // enable automatic toggle after successful transfer completion: 0=manual toggle, 1=automatic toggle
-#define USBFS_UH_R_TOG 0x04      // expected data toggle flag of host receiving (IN): 0=DATA0, 1=DATA1
-#define USBFS_UH_R_RES 0x01      // prepared handshake response type for host receiving (IN): 0=ACK (ready), 1=no response, time out to device, for isochronous transactions
+#define USBFS_UH_R_AUTO_TOG 0x08  // enable automatic toggle after successful transfer completion: 0=manual toggle, 1=automatic toggle
+#define USBFS_UH_R_TOG 0x04       // expected data toggle flag of host receiving (IN): 0=DATA0, 1=DATA1
+#define USBFS_UH_R_RES 0x01       // prepared handshake response type for host receiving (IN): 0=ACK (ready), 1=no response, time out to device, for isochronous transactions
 
 /* R8_UH_TX_CTRL */
-#define USBFS_UH_T_AUTO_TOG 0x08 // enable automatic toggle after successful transfer completion: 0=manual toggle, 1=automatic toggle
-#define USBFS_UH_T_TOG 0x04      // prepared data toggle flag of host transmittal (SETUP/OUT): 0=DATA0, 1=DATA1
-#define USBFS_UH_T_RES 0x01      // expected handshake response type for host transmittal (SETUP/OUT): 0=ACK (ready), 1=no response, time out from device, for isochronous transactions
-
-/*******************************************************************************/
-/* USBD Related Register Macro Definition */
-
-/* R16_USBD_CNTR */
-#define USBD_CNTR_CTRM (1 << 15)      // Correct transfer interrupt: 1 = enable
-#define USBD_CNTR_PMAOVRM (1 << 14)   // Packet buffer overflow interrupt: 1 = enable
-#define USBD_CNTR_ERRM (1 << 13)      // Error interrupt: 1 = enable
-#define USBD_CNTR_WKUPM (1 << 12)     // Wake-up interrupt: 1 = enable
-#define USBD_CNTR_SUSPM (1 << 11)     // Suspend interrupt: 1 = enable
-#define USBD_CNTR_RESETM (1 << 10)    // Reset interrupt: 1 = enable
-#define USBD_CNTR_SOFM (1 << 9)       // Start of frame interrupt: 1 = enable
-#define USBD_CNTR_ESOFM (1 << 8)      // Start of frame error interrupt: 1 = enable
-#define USBD_CNTR_MODE_1WIRE (1 << 7) // 1-wire mode (only supported on CH32F20x_D8 family)
-#define USBD_CNTR_RESUME (1 << 4)     // Wake-up request control: 1 = Output wake-up signal
-#define USBD_CNTR_FSUSP (1 << 3)      // Mask suspend detection control
-#define USBD_CNTR_LPMODE (1 << 2)     // Low-power mode control: 1 = low-power mode
-#define USBD_CNTR_PDWN (1 << 1)       // Power down mode
-#define USBD_CNTR_FRES (1 << 0)       // Force USB reset control: 1 = Forcibly reset the USBD module. The USBD module will remain in reset until software clears this bit
-
-/* R16_USBD_ISTR */
-#define USBD_ISTR_CTR (1 << 15)     // Correct transfer interrupt
-#define USBD_ISTR_PMAOVR (1 << 14)  // Packet buffer overflow interrupt
-#define USBD_ISTR_ERR (1 << 13)     // Error interrupt
-#define USBD_ISTR_WKUP (1 << 12)    // Wakeup interrupt
-#define USBD_ISTR_SUSP (1 << 11)    // Suspend interrupt
-#define USBD_ISTR_RESET (1 << 10)   // Reset interrupt
-#define USBD_ISTR_SOF (1 << 9)      // SOF interrupt
-#define USBD_ISTR_ESOF (1 << 8)     // ESOF interrupt
-#define USBD_ISTR_DIR (1 << 4)      // Data transfer direction: 0 = Data transfer from the USBD module to the PC host
-#define USBD_ISTR_EP_ID_MASK 0b1111 // Endpoint ID of the interrupt
-
-/* R16_USBD_FNR */
-#define USBD_FNR_RXDP (1 << 15)          // DP line level status
-#define USBD_FNR_RXDM (1 << 14)          // DM line level status
-#define USBD_FNR_LCK (1 << 13)           // SOF packet count stop lock
-#define USBD_FNR_LSOF_MASK (0b11 << 11)  // Lost SOF frame count
-#define USBD_FNR_FN_MASK (0b11111111111) // SOF frame number
-
-/* R16_USBD_DADDR */
-#define USBD_DADDR_EF (1 << 7)          // USB function enable
-#define USBD_DADDR_ADD_MASK (0b1111111) // USB device address
-
-/* R16_USBD_BTABLE */
-#define USBD_BTABLE_BLABLE_MASK (0b1111111111111000) // offset address from 0x40006000 of the packet buffer description table
-
-/* btable structure */
-
-/* BTABLE mapping */
-#define USBD_BTABLE_BASE (USBD_CAN1_CAN2_SRAM_BASE)
-#define USBD_BTABLE_EP(x) ((USBD_BTABLE_TypeDef *)(USBD_BTABLE_BASE + (x * 16))) // 32-bit absolute memory address
-#define USBD_BTABLE_END (USBD->BTABLE + (8 * 8))                                 // 16-bit relative address
-#define USBD_BTABLE_COUNT_RX_MASK 0x3FF
-
-/* R16_USBD_EPR[0:7] */
-#define USBD_EPR(x) ((USBD_EPR_TypeDef *)(USBD_EP_BASE + (x * 4)))
-#define USBD_EPR_CTR_RX (1 << 15)              // Correct reception flag (OUT/SETUP).
-#define USBD_EPR_DTOG_RX (1 << 14)             // toggle DATA0-1 for RX
-#define USBD_EPR_STAT_RX_DISABLED (0b00 << 12) // RX Disabled (ignores all RX)
-#define USBD_EPR_STAT_RX_STALL (0b01 << 12)    // RX Stall (error)
-#define USBD_EPR_STAT_RX_NAK (0b10 << 12)      // RX NAK (not ready for RX)
-#define USBD_EPR_STAT_RX_ACK (0b11 << 12)      // RX ACK (ok for RX)
-#define USBD_EPR_STAT_RX_MASK (0b11 << 12)     // RX reception status
-#define USBD_EPR_SETUP (1 << 11)               // SETUP frame received flag
-#define USBD_EPR_EPTYPE_BULK (0b00 << 9)       // Bulk endpoint
-#define USBD_EPR_EPTYPE_CONTROL (0b01 << 9)    // Control endpoint
-#define USBD_EPR_EPTYPE_ISO (0b10 << 9)        // Isochronous endpoint
-#define USBD_EPR_EPTYPE_INTERRUPT (0b11 << 9)  // Interrupt endpoint
-#define USBD_EPR_EPTYPE_MASK (0b11 << 9)       // Endpoint type
-#define USBD_EPR_EP_KIND (1 << 8)              // Endpoint type control bits
-#define USBD_EPR_CTR_TX (1 << 7)               // Correct transmission flag (IN)
-#define USBD_EPR_DTOG_TX (1 << 6)              // toggle DATA0-1 for TX
-#define USBD_EPR_STAT_TX_DISABLED (0b00 << 4)  // TX Disabled (ignores all TX)
-#define USBD_EPR_STAT_TX_STALL (0b01 << 4)     // TX Stall (error)
-#define USBD_EPR_STAT_TX_NAK (0b10 << 4)       // TX NAK (not ready for TX)
-#define USBD_EPR_STAT_TX_ACK (0b11 << 4)       // TX ACK (ok for TX)
-#define USBD_EPR_STAT_TX_MASK (0b11 << 4)      // TX status
-#define USBD_EPR_EA_MASK (0b1111 << 0)         // Endpoint address
-
-// EPR with toggle-bits unset and clear-bits uncleared
-#define USBD_EPR_INVARIANT(x) ((USBD_EPR(x)->EPR & ~(USBD_EPR_DTOG_RX | USBD_EPR_STAT_RX_MASK | USBD_EPR_DTOG_TX | USBD_EPR_STAT_TX_MASK)) | (USBD_EPR_CTR_RX | USBD_EPR_CTR_TX))
-
-// eeeeeeeeeeeeeeeeeeeeeeee this is fucking disgusting
-#define USBD_EPR_STAT_RX(x, y) ((USBD_EPR_INVARIANT(x)) | ((USBD_EPR(x)->EPR & USBD_EPR_STAT_RX_MASK) ^ y))
-#define USBD_EPR_STAT_TX(x, y) ((USBD_EPR_INVARIANT(x)) | ((USBD_EPR(x)->EPR & USBD_EPR_STAT_TX_MASK) ^ y))
+#define USBFS_UH_T_AUTO_TOG 0x08  // enable automatic toggle after successful transfer completion: 0=manual toggle, 1=automatic toggle
+#define USBFS_UH_T_TOG 0x04       // prepared data toggle flag of host transmittal (SETUP/OUT): 0=DATA0, 1=DATA1
+#define USBFS_UH_T_RES 0x01       // expected handshake response type for host transmittal (SETUP/OUT): 0=ACK (ready), 1=no response, time out from device, for isochronous transactions
 
 /*******************************************************************************/
 /* Struct Definition */
 
 /* USB Setup Request */
-typedef struct __attribute__((packed)) _USB_SETUP_REQ {
+typedef struct __attribute__ ((packed)) _USB_SETUP_REQ {
     uint8_t bRequestType;
     uint8_t bRequest;
     uint16_t wValue;
@@ -493,7 +409,7 @@ typedef struct __attribute__((packed)) _USB_SETUP_REQ {
 } USB_SETUP_REQ, *PUSB_SETUP_REQ;
 
 /* USB Device Descriptor */
-typedef struct __attribute__((packed)) _USB_DEVICE_DESCR {
+typedef struct __attribute__ ((packed)) _USB_DEVICE_DESCR {
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint16_t bcdUSB;
@@ -511,7 +427,7 @@ typedef struct __attribute__((packed)) _USB_DEVICE_DESCR {
 } USB_DEV_DESCR, *PUSB_DEV_DESCR;
 
 /* USB Configuration Descriptor */
-typedef struct __attribute__((packed)) _USB_CONFIG_DESCR {
+typedef struct __attribute__ ((packed)) _USB_CONFIG_DESCR {
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint16_t wTotalLength;
@@ -523,7 +439,7 @@ typedef struct __attribute__((packed)) _USB_CONFIG_DESCR {
 } USB_CFG_DESCR, *PUSB_CFG_DESCR;
 
 /* USB Interface Descriptor */
-typedef struct __attribute__((packed)) _USB_INTERF_DESCR {
+typedef struct __attribute__ ((packed)) _USB_INTERF_DESCR {
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint8_t bInterfaceNumber;
@@ -536,7 +452,7 @@ typedef struct __attribute__((packed)) _USB_INTERF_DESCR {
 } USB_ITF_DESCR, *PUSB_ITF_DESCR;
 
 /* USB Endpoint Descriptor */
-typedef struct __attribute__((packed)) _USB_ENDPOINT_DESCR {
+typedef struct __attribute__ ((packed)) _USB_ENDPOINT_DESCR {
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint8_t bEndpointAddress;
@@ -547,14 +463,14 @@ typedef struct __attribute__((packed)) _USB_ENDPOINT_DESCR {
 } USB_ENDP_DESCR, *PUSB_ENDP_DESCR;
 
 /* USB Configuration Descriptor Set */
-typedef struct __attribute__((packed)) _USB_CONFIG_DESCR_LONG {
+typedef struct __attribute__ ((packed)) _USB_CONFIG_DESCR_LONG {
     USB_CFG_DESCR cfg_descr;
     USB_ITF_DESCR itf_descr;
     USB_ENDP_DESCR endp_descr[1];
 } USB_CFG_DESCR_LONG, *PUSB_CFG_DESCR_LONG;
 
 /* USB HUB Descriptor */
-typedef struct __attribute__((packed)) _USB_HUB_DESCR {
+typedef struct __attribute__ ((packed)) _USB_HUB_DESCR {
     uint8_t bDescLength;
     uint8_t bDescriptorType;
     uint8_t bNbrPorts;
@@ -567,7 +483,7 @@ typedef struct __attribute__((packed)) _USB_HUB_DESCR {
 } USB_HUB_DESCR, *PUSB_HUB_DESCR;
 
 /* USB HID Descriptor */
-typedef struct __attribute__((packed)) _USB_HID_DESCR {
+typedef struct __attribute__ ((packed)) _USB_HID_DESCR {
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint16_t bcdHID;
@@ -579,7 +495,7 @@ typedef struct __attribute__((packed)) _USB_HID_DESCR {
 } USB_HID_DESCR, *PUSB_HID_DESCR;
 
 /* USB UDisk */
-typedef struct __attribute__((packed)) _UDISK_BOC_CBW {
+typedef struct __attribute__ ((packed)) _UDISK_BOC_CBW {
     uint32_t mCBW_Sig;
     uint32_t mCBW_Tag;
     uint32_t mCBW_DataLen;
@@ -590,12 +506,13 @@ typedef struct __attribute__((packed)) _UDISK_BOC_CBW {
 } UDISK_BOC_CBW, *PXUDISK_BOC_CBW;
 
 /* USB UDisk */
-typedef struct __attribute__((packed)) _UDISK_BOC_CSW {
+typedef struct __attribute__ ((packed)) _UDISK_BOC_CSW {
     uint32_t mCBW_Sig;
     uint32_t mCBW_Tag;
     uint32_t mCSW_Residue;
     uint8_t mCSW_Status;
 } UDISK_BOC_CSW, *PXUDISK_BOC_CSW;
+
 
 #ifdef __cplusplus
 }

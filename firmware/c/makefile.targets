@@ -1,5 +1,5 @@
-flash: sentinel-65x-keyboard-adapter.elf
+flash: s65x-keyboard-firmware-c.elf
 	@echo 'Invoking: wlink flash tool'
-	wlink flash -e --chip ch32v20x "sentinel-65x-keyboard-adapter.elf"
+	wlink flash -e --chip ch32v20x "s65x-keyboard-firmware-c.elf"
 	@echo 'Finished flashing: $@'
 	@echo ' '

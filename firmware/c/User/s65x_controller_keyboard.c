@@ -17,6 +17,8 @@
 #include "task.h"
 #include "timers.h"
 
+#include "utils.h"
+
 #ifdef HAS_CONTROLLER_KEYBOARD
 #ifndef HAS_USB_KEYBOARD
 #ifndef HAS_PS2_KEYBOARD
@@ -32,6 +34,10 @@ static QueueHandle_t s65x_keyboard_input_queue = NULL;
 static QueueHandle_t s65x_keyboard_output_queue = NULL;
 
 static TaskHandle_t s65x_keyboard_task_handle = NULL;
+
+#define CONTROLLER_KEYBOARD_STACK_SIZE 256
+StaticTask_t controller_keyboard_task_buffer;
+StackType_t controller_keyboard_stack[CONTROLLER_KEYBOARD_STACK_SIZE];
 
 // configuration variables and set functions
 
@@ -182,6 +188,20 @@ void s65x_keyboard_task(void *pvParameters) {
     // start up paused
     xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
     while (1) {
+#ifdef DEBUG
+        UBaseType_t hwm = uxTaskGetStackHighWaterMark(NULL);
+        if (hwm < 32) {
+            // drop to debugger in debug builds
+            __EBREAK();
+        }
+        HeapStats_t hs;
+        vPortGetHeapStats(&hs);
+        if (hs.xAvailableHeapSpaceInBytes < 1024 || hs.xMinimumEverFreeBytesRemaining < 1024) {
+            // drop to debugger in debug builds
+            __EBREAK();
+        }
+#endif
+
         // current loop keyboard state
         s65x_keyboard this_state = {.u16 = 0};
         this_state.keyboard.signature = S65X_SIGNATURE_KEYBOARD;
@@ -597,12 +617,13 @@ __attribute__((section(".slowfunc"))) bool s65x_controller_keyboard_init(void) {
 
     // create processing task
     if (s65x_keyboard_task_handle == NULL)
-        if (xTaskCreate(s65x_keyboard_task,
-                        "s65x_keyboard",
-                        384,
-                        NULL,
-                        2,
-                        NULL) != pdPASS)
+        if (xTaskCreateStatic(s65x_keyboard_task,
+                              "s65x_keyboard",
+                              CONTROLLER_KEYBOARD_STACK_SIZE,
+                              NULL,
+                              2,
+                              controller_keyboard_stack,
+                              &controller_keyboard_task_buffer) == NULL)
             return false;
 
     s65x_controller_keyboard_init_complete = true;

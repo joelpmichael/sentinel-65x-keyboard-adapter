@@ -19,11 +19,20 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "utils.h"
+
+#define S65X_CONTROLLER_TASK_PRIORITY (tskIDLE_PRIORITY + 2)
+
 // flag for controller port init completion
 static bool s65x_controller_init_complete = false;
 
 // task handle for s65x_next_word_task
 static TaskHandle_t s65x_next_word_task_handle = NULL;
+
+#define CONTROLLER_STACK_SIZE 256
+StaticTask_t controller_task_buffer;
+StackType_t controller_stack[CONTROLLER_STACK_SIZE];
+
 // next word to be sent, retrieved by s65x_next_word_task
 static uint16_t s65x_next_word = 0xFFFF;
 
@@ -37,6 +46,20 @@ void s65x_next_word_task(void *pvParameters) {
 
     // cycle through all controller devices until one returns data
     while (1) {
+#ifdef DEBUG
+        UBaseType_t hwm = uxTaskGetStackHighWaterMark(NULL);
+        if (hwm < 32) {
+            // drop to debugger in debug builds
+            __EBREAK();
+        }
+        HeapStats_t hs;
+        vPortGetHeapStats(&hs);
+        if (hs.xAvailableHeapSpaceInBytes < 1024 || hs.xMinimumEverFreeBytesRemaining < 1024) {
+            // drop to debugger in debug builds
+            __EBREAK();
+        }
+#endif
+
 #ifdef HAS_CONTROLLER_PAD
 #error -DHAS_CONTROLLER_PAD not yet implemented
         if (next_device == CONTROLLER_PAD) {
@@ -73,6 +96,9 @@ void s65x_next_word_task(void *pvParameters) {
         if (next_device == NUM_CONTROLLER_DEVICES) {
             next_device = 0;
         }
+        vTaskPrioritySet(NULL, tskIDLE_PRIORITY);
+        portYIELD();
+        vTaskPrioritySet(NULL, S65X_CONTROLLER_TASK_PRIORITY);
     }
 }
 
@@ -180,12 +206,13 @@ __attribute__((section(".slowfunc"))) bool s65x_controller_init(void) {
     // create task to perform fetching of the next word to be sent
     // see s65x_next_word_task() for details
     if (s65x_next_word_task_handle == NULL)
-        if (xTaskCreate(s65x_next_word_task,
-                        "s65x_next_word",
-                        64,
-                        NULL,
-                        1,
-                        NULL) != pdPASS)
+        if (xTaskCreateStatic(s65x_next_word_task,
+                              "s65x_next_word",
+                              CONTROLLER_STACK_SIZE,
+                              NULL,
+                              S65X_CONTROLLER_TASK_PRIORITY,
+                              controller_stack,
+                              &controller_task_buffer) == NULL)
             return false;
 
             // init peripherals that the controller emulates

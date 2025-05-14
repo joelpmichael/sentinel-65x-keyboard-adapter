@@ -1,74 +1,31 @@
 ENTRY( _start )
 
-__stack_size = 2048;
+__stack_size = 1024;
 
 PROVIDE( _stack_size = __stack_size );
 
 
 MEMORY
-{
-/* CH32V20x_D6 - CH32V203F6-CH32V203G6-CH32V203K6-CH32V203C6 */
+{  
+/* CH32V20x_D6 - CH32V203F6-CH32V203G6-CH32V203C6 */
 /*
     FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 32K
     RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 10K
-*/
+*/ 
 
 /* CH32V20x_D6 - CH32V203K8-CH32V203C8-CH32V203G8-CH32V203F8 */
 /**/
-    /*
-     * !!! HERE BE DRAGONS !!!
-     *
-     * These parts actually contain a 256K flash wafer wire-bonded to the core!
-     *
-     * The first 224K is in the main flash area at 0x0800_0000
-     * The next 28K is in the boot-loader flash area at 0x1FFF_8000
-     * The last 4K is used by the vendor-bytes, option-bytes, and "reserved"
-     *
-     * The first 64K of the first 224K is "zero-wait", i.e. where your program
-     * should live when executing from flash, and works at full CPU speed with
-     * no stalling. The remainder must be accessed at no more than 60MHz,
-     * with the flash clock generated from the CPU clock with a /2 divider.
-     * This means, you must not clock the CPU at 144MHz if you want to use all
-     * the available flash! Even worse, if you want to use USB as well as all
-     * the flash, your CPU clock will be limited to 96MHz.
-     *
-     * Unfortunately, the CH32V203C8 is a lying liar that lies, and the
-     * hacked-on OpenOCD distributed by WCH is stupid enough to believe it.
-     * The register at 0x1ffff7e0 claims how much flash is available, but this
-     * is how much zero-wait flash is available not the total flash size. When
-     * OpenOCD programs the flash, it erases the ENTIRE 224K first, then only
-     * programs up to the size that the MCU says (64K) and silently discards
-     * everything after that.
-     *
-     * Even worse, the OpenOCD hacks appear to assume that the flash is only
-     * ever located at 0x00000000. If the linker puts code at the "real"
-     * flash address of 0x08000000 then OpenOCD won't even bother flashing
-     * the code at all...
-     *
-     * The easy fix is to use a different tool to do the flashing, one that
-     * knows that the CH32V203C8 is a lying liar that lies. Luckily, wlink is
-     * exactly that. Grab it from https://github.com/ch32-rs/wlink
-     *
-     */
-
-    /* entire flash */
-    FLASH_ALL : ORIGIN = 0x08000000, LENGTH = 224K
-    /* zero-wait flash */
-    FLASH_ZERO (rx) : ORIGIN = 0x00000000, LENGTH = 64K
-    /* remainder of flash for code */
-    FLASH_SLOW (rx) : ORIGIN = 0x08000000 + 64K, LENGTH = 128K
-    /* flash reserved for data storage area */
-    FLASH_DATA (rw) : ORIGIN = 0x08000000 + 64K + 128K, LENGTH = 32K
-    /* internal SRAM */
+    FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 224K
+    F_ZERO (rx) : ORIGIN = 0x00000000, LENGTH = 64K
     RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 20K
 
 
 /* CH32V20x_D8 - CH32V203RB
-   CH32V20x_D8W - CH32V208x
-   FLASH + RAM supports the following configuration
-   FLASH-128K + RAM-64K
-   FLASH-144K + RAM-48K
-   FLASH-160K + RAM-32K
+CH32V20x_D8W - CH32V208x
+FLASH + RAM supports the following configuration
+FLASH-128K + RAM-64K
+FLASH-144K + RAM-48K
+FLASH-160K + RAM-32K
 
     FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 160K
     RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 32K
@@ -86,13 +43,22 @@ SECTIONS
         KEEP(*(SORT_NONE(.init)))
         . = ALIGN(4);
         _einit = .;
-    } >FLASH_ZERO AT>FLASH_ALL
+    } >F_ZERO AT>FLASH
 
     .vector :
     {
         *(.vector);
         . = ALIGN(64);
-    } >FLASH_ZERO AT>FLASH_ALL
+    } >F_ZERO AT>FLASH
+
+    .sysinit :
+    {
+        . = ALIGN(4);
+        *(.text.handle_reset) /* reset handler, from startup_ch32v20x_D6.s */
+        *(.text.SystemInit) /* called directly from assembly reset handler */
+        *(.text.vector_handler) /* default interrupt handler */
+        *(.text.main) /* main() function */
+    } >F_ZERO AT>FLASH
 
     .text :
     {
@@ -105,88 +71,111 @@ SECTIONS
         *(.glue_7t)
         *(.gnu.linkonce.t.*)
         . = ALIGN(4);
-    } >FLASH_ZERO AT>FLASH_ALL
+    } >FLASH
+
+	.slow :
+	{
+		. = ALIGN(4);
+		*(.slowfunc .slowfunc.*)
+		*(.slowconst .slowconst.*)
+		*(.text.SystemCoreClockUpdate)
+		*(.text.SetSysClockTo*)
+		*(.text.RCC_AHBPeriphClockCmd .text.RCC_APB?PeriphClockCmd .text.RCC_APB?PeriphResetCmd)
+		*(.text.*init* .text.*Init*)
+		*(.text.vTaskStart* .text.xPortStart* .text.*CreateStatic .text.*Create*Static)
+		. = ALIGN(4);
+	} >FLASH
 
     .fini :
     {
         KEEP(*(SORT_NONE(.fini)))
         . = ALIGN(4);
-    } >FLASH_ZERO AT>FLASH_ALL
+    } >FLASH
 
     PROVIDE( _etext = . );
-    PROVIDE( _eitcm = . );
+    PROVIDE( _eitcm = . );	
 
     .preinit_array  :
     {
-      PROVIDE_HIDDEN (__preinit_array_start = .);
-      KEEP (*(.preinit_array))
-      PROVIDE_HIDDEN (__preinit_array_end = .);
-    } >FLASH_ZERO AT>FLASH_ALL
-
+        PROVIDE_HIDDEN (__preinit_array_start = .);
+        KEEP (*(.preinit_array))
+        PROVIDE_HIDDEN (__preinit_array_end = .);
+    } >FLASH
+    
     .init_array     :
     {
-      PROVIDE_HIDDEN (__init_array_start = .);
-      KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
-      KEEP (*(.init_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
-      PROVIDE_HIDDEN (__init_array_end = .);
-    } >FLASH_ZERO AT>FLASH_ALL
-
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP (*(.init_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
+        PROVIDE_HIDDEN (__init_array_end = .);
+    } >FLASH
+    
     .fini_array     :
     {
-      PROVIDE_HIDDEN (__fini_array_start = .);
-      KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
-      KEEP (*(.fini_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
-      PROVIDE_HIDDEN (__fini_array_end = .);
-    } >FLASH_ZERO AT>FLASH_ALL
-
+        PROVIDE_HIDDEN (__fini_array_start = .);
+        KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
+        KEEP (*(.fini_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
+        PROVIDE_HIDDEN (__fini_array_end = .);
+    } >FLASH
+    
     .ctors          :
     {
-      /* gcc uses crtbegin.o to find the start of
-         the constructors, so we make sure it is
-         first.  Because this is a wildcard, it
-         doesn't matter if the user does not
-         actually link against crtbegin.o; the
-         linker won't look for a file to match a
-         wildcard.  The wildcard also means that it
-         doesn't matter which directory crtbegin.o
-         is in.  */
-      KEEP (*crtbegin.o(.ctors))
-      KEEP (*crtbegin?.o(.ctors))
-      /* We don't want to include the .ctor section from
-         the crtend.o file until after the sorted ctors.
-         The .ctor section from the crtend file contains the
-         end of ctors marker and it must be last */
-      KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .ctors))
-      KEEP (*(SORT(.ctors.*)))
-      KEEP (*(.ctors))
-    } >FLASH_ZERO AT>FLASH_ALL
-
+        /* gcc uses crtbegin.o to find the start of
+            the constructors, so we make sure it is
+            first.  Because this is a wildcard, it
+            doesn't matter if the user does not
+            actually link against crtbegin.o; the
+            linker won't look for a file to match a
+            wildcard.  The wildcard also means that it
+            doesn't matter which directory crtbegin.o
+            is in.  */
+        KEEP (*crtbegin.o(.ctors))
+        KEEP (*crtbegin?.o(.ctors))
+        /* We don't want to include the .ctor section from
+            the crtend.o file until after the sorted ctors.
+            The .ctor section from the crtend file contains the
+            end of ctors marker and it must be last */
+        KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .ctors))
+        KEEP (*(SORT(.ctors.*)))
+        KEEP (*(.ctors))
+    } >FLASH
+    
     .dtors          :
     {
-      KEEP (*crtbegin.o(.dtors))
-      KEEP (*crtbegin?.o(.dtors))
-      KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .dtors))
-      KEEP (*(SORT(.dtors.*)))
-      KEEP (*(.dtors))
-    } >FLASH_ZERO AT>FLASH_ALL
+        KEEP (*crtbegin.o(.dtors))
+        KEEP (*crtbegin?.o(.dtors))
+        KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .dtors))
+        KEEP (*(SORT(.dtors.*)))
+        KEEP (*(.dtors))
+    } >FLASH
 
     .dalign :
     {
         . = ALIGN(4);
         PROVIDE(_data_vma = .);
-    } >RAM AT>FLASH_SLOW
+    } >RAM AT>FLASH	
 
     .dlalign :
     {
-        . = ALIGN(4);
+        . = ALIGN(4); 
         PROVIDE(_data_lma = .);
-    } >FLASH_SLOW
+    } >FLASH AT>FLASH
+
+	.ramfunc :
+	{
+		. = ALIGN(4);
+		*(.ramfunc .ramfunc.*)
+		*(.text.hcd_int_handler .text.dcd_int_handler .text.SysTick_Handler .text.SW_Handler)
+		*(.text.vPortEnterCritical .text.vPortExitCritical .text.xTaskIncrementTick)
+		. = ALIGN(4);
+	} >RAM AT>FLASH
 
     .data :
     {
         *(.gnu.linkonce.r.*)
         *(.data .data.*)
         *(.gnu.linkonce.d.*)
+        *(.bss.ucHeap .bss.*_stack .bss.*TaskStack .bss._hidh_epbuf) /* move task stacks outside the GP section */
         . = ALIGN(8);
         PROVIDE( __global_pointer$ = . + 0x800 );
         *(.sdata .sdata.*)
@@ -198,43 +187,37 @@ SECTIONS
         *(.srodata.cst4)
         *(.srodata.cst2)
         *(.srodata .srodata.*)
-        *(.ramfunc .ramfunc.*)
         . = ALIGN(4);
         PROVIDE( _edata = .);
-    } >RAM AT>FLASH_SLOW
+    } >RAM AT>FLASH
 
     .bss :
     {
         . = ALIGN(4);
         PROVIDE( _sbss = .);
-          *(.sbss*)
+        *(.sbss*)
         *(.gnu.linkonce.sb.*)
         *(.bss*)
-         *(.gnu.linkonce.b.*)
+        *(.gnu.linkonce.b.*)		
         *(COMMON*)
         . = ALIGN(4);
         PROVIDE( _ebss = .);
-    } >RAM AT>FLASH_SLOW
-
-    .slow :
-    {
-        . = ALIGN(4);
-        *(.slowfunc .slowfunc.*)
-        *(.slowconst .slowconst.*)
-        . = ALIGN(4);
-    } >FLASH_SLOW
+    } >RAM
 
     PROVIDE( _end = _ebss);
     PROVIDE( end = . );
 
     .stack ORIGIN(RAM) + LENGTH(RAM) - __stack_size :
     {
-        PROVIDE( _heap_end = . );
+        PROVIDE( _heap_end = . );    
         . = ALIGN(4);
         PROVIDE(_susrstack = . );
         . = . + __stack_size;
         PROVIDE( _eusrstack = .);
         __freertos_irq_stack_top = .;
-    } >RAM
+    } >RAM 
 
 }
+
+
+

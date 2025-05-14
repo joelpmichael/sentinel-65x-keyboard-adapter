@@ -19,7 +19,7 @@
  * If none of the define below is enabled, the HSI is used as System clock source.
  */
 // #define SYSCLK_FREQ_HSE    HSE_VALUE
-// #define SYSCLK_FREQ_48MHz_HSE 48000000
+// #define SYSCLK_FREQ_48MHz_HSE  48000000
 // #define SYSCLK_FREQ_56MHz_HSE  56000000
 // #define SYSCLK_FREQ_72MHz_HSE  72000000
 #define SYSCLK_FREQ_96MHz_HSE 96000000
@@ -67,35 +67,36 @@ uint32_t SystemCoreClock = HSI_VALUE; /* System Clock Frequency (Core Clock) */
 
 __I uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 
+
 /* system_private_function_proto_types */
-static void SetSysClock(void);
+static  inline __attribute__((always_inline)) void SetSysClock (void);
 
 #ifdef SYSCLK_FREQ_HSE
-static void SetSysClockToHSE(void);
+static void SetSysClockToHSE (void);
 #elif defined SYSCLK_FREQ_48MHz_HSE
-static void SetSysClockTo48_HSE(void);
+static void SetSysClockTo48_HSE (void);
 #elif defined SYSCLK_FREQ_56MHz_HSE
-static void SetSysClockTo56_HSE(void);
+static void SetSysClockTo56_HSE (void);
 #elif defined SYSCLK_FREQ_72MHz_HSE
-static void SetSysClockTo72_HSE(void);
+static void SetSysClockTo72_HSE (void);
 #elif defined SYSCLK_FREQ_96MHz_HSE
-static void SetSysClockTo96_HSE(void);
+static void SetSysClockTo96_HSE (void);
 #elif defined SYSCLK_FREQ_120MHz_HSE
-static void SetSysClockTo120_HSE(void);
+static void SetSysClockTo120_HSE (void);
 #elif defined SYSCLK_FREQ_144MHz_HSE
-static void SetSysClockTo144_HSE(void);
+static void SetSysClockTo144_HSE (void);
 #elif defined SYSCLK_FREQ_48MHz_HSI
-static void SetSysClockTo48_HSI(void);
+static void SetSysClockTo48_HSI (void);
 #elif defined SYSCLK_FREQ_56MHz_HSI
-static void SetSysClockTo56_HSI(void);
+static void SetSysClockTo56_HSI (void);
 #elif defined SYSCLK_FREQ_72MHz_HSI
-static void SetSysClockTo72_HSI(void);
+static void SetSysClockTo72_HSI (void);
 #elif defined SYSCLK_FREQ_96MHz_HSI
-static void SetSysClockTo96_HSI(void);
+static void SetSysClockTo96_HSI (void);
 #elif defined SYSCLK_FREQ_120MHz_HSI
-static void SetSysClockTo120_HSI(void);
+static void SetSysClockTo120_HSI (void);
 #elif defined SYSCLK_FREQ_144MHz_HSI
-static void SetSysClockTo144_HSI(void);
+static void SetSysClockTo144_HSI (void);
 
 #endif
 
@@ -107,7 +108,7 @@ static void SetSysClockTo144_HSI(void);
  *
  * @return  none
  */
-void SystemInit(void) {
+void SystemInit (void) {
     RCC->CTLR |= (uint32_t)0x00000001;
     RCC->CFGR0 &= (uint32_t)0xF0FF0000;
     RCC->CTLR &= (uint32_t)0xFEF6FFFF;
@@ -124,7 +125,7 @@ void SystemInit(void) {
  *
  * @return  none
  */
-void SystemCoreClockUpdate(void) {
+void SystemCoreClockUpdate (void) {
     uint32_t tmp = 0, pllmull = 0, pllsource = 0, Pll_6_5 = 0;
 
     tmp = RCC->CFGR0 & RCC_SWS;
@@ -151,8 +152,8 @@ void SystemCoreClockUpdate(void) {
                 SystemCoreClock = (HSI_VALUE >> 1) * pllmull;
             }
         } else {
-#if defined(CH32V20x_D8W)
-            if ((RCC->CFGR0 & (3 << 22)) == (3 << 22)) {
+#if defined(CH32V20x_D8W) || defined(CH32V20x_D8)
+            if (((RCC->CFGR0 & (3 << 22)) == (3 << 22)) && (RCC_USB5PRE_JUDGE() == SET)) {
                 SystemCoreClock = ((HSE_VALUE >> 1)) * pllmull;
             } else
 #endif
@@ -191,7 +192,7 @@ void SystemCoreClockUpdate(void) {
  *
  * @return  none
  */
-static void SetSysClock(void) {
+static void SetSysClock (void) {
     // GPIO_IPD_Unused();
 #ifdef SYSCLK_FREQ_HSE
     SetSysClockToHSE();
@@ -227,6 +228,7 @@ static void SetSysClock(void) {
      */
 }
 
+
 #ifdef SYSCLK_FREQ_HSE
 
 /*********************************************************************
@@ -236,8 +238,9 @@ static void SetSysClock(void) {
  *
  * @return  none
  */
-static void SetSysClockToHSE(void) {
+static void SetSysClockToHSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
+
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
 
@@ -288,8 +291,9 @@ static void SetSysClockToHSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo48_HSE(void) {
+static void SetSysClockTo48_HSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
+
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
     /* Wait till HSE is ready and if Time out is reached exit */
@@ -348,7 +352,7 @@ static void SetSysClockTo48_HSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo56_HSE(void) {
+static void SetSysClockTo56_HSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
@@ -410,7 +414,7 @@ static void SetSysClockTo56_HSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo72_HSE(void) {
+static void SetSysClockTo72_HSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
@@ -463,6 +467,7 @@ static void SetSysClockTo72_HSE(void) {
     }
 }
 
+
 #elif defined SYSCLK_FREQ_96MHz_HSE
 
 /*********************************************************************
@@ -472,7 +477,7 @@ static void SetSysClockTo72_HSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo96_HSE(void) {
+static void SetSysClockTo96_HSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
@@ -493,7 +498,7 @@ static void SetSysClockTo96_HSE(void) {
         /* HCLK = SYSCLK */
         RCC->CFGR0 |= (uint32_t)RCC_HPRE_DIV1;
         /* PCLK2 = HCLK */
-        RCC->CFGR0 |= (uint32_t)RCC_PPRE2_DIV2;
+        RCC->CFGR0 |= (uint32_t)RCC_PPRE2_DIV1;
         /* PCLK1 = HCLK */
         RCC->CFGR0 |= (uint32_t)RCC_PPRE1_DIV2;
 
@@ -525,6 +530,7 @@ static void SetSysClockTo96_HSE(void) {
     }
 }
 
+
 #elif defined SYSCLK_FREQ_120MHz_HSE
 
 /*********************************************************************
@@ -534,7 +540,7 @@ static void SetSysClockTo96_HSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo120_HSE(void) {
+static void SetSysClockTo120_HSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
@@ -601,7 +607,7 @@ static void SetSysClockTo120_HSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo144_HSE(void) {
+static void SetSysClockTo144_HSE (void) {
     __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
 
     RCC->CTLR |= ((uint32_t)RCC_HSEON);
@@ -663,7 +669,7 @@ static void SetSysClockTo144_HSE(void) {
  *
  * @return  none
  */
-static void SetSysClockTo48_HSI(void) {
+static void SetSysClockTo48_HSI (void) {
     EXTEN->EXTEN_CTR |= EXTEN_PLL_HSI_PRE;
 
     /* HCLK = SYSCLK */
@@ -700,7 +706,7 @@ static void SetSysClockTo48_HSI(void) {
  *
  * @return  none
  */
-static void SetSysClockTo56_HSI(void) {
+static void SetSysClockTo56_HSI (void) {
     EXTEN->EXTEN_CTR |= EXTEN_PLL_HSI_PRE;
 
     /* HCLK = SYSCLK */
@@ -737,7 +743,7 @@ static void SetSysClockTo56_HSI(void) {
  *
  * @return  none
  */
-static void SetSysClockTo72_HSI(void) {
+static void SetSysClockTo72_HSI (void) {
     EXTEN->EXTEN_CTR |= EXTEN_PLL_HSI_PRE;
 
     /* HCLK = SYSCLK */
@@ -765,6 +771,7 @@ static void SetSysClockTo72_HSI(void) {
     }
 }
 
+
 #elif defined SYSCLK_FREQ_96MHz_HSI
 
 /*********************************************************************
@@ -774,7 +781,7 @@ static void SetSysClockTo72_HSI(void) {
  *
  * @return  none
  */
-static void SetSysClockTo96_HSI(void) {
+static void SetSysClockTo96_HSI (void) {
     EXTEN->EXTEN_CTR |= EXTEN_PLL_HSI_PRE;
 
     /* HCLK = SYSCLK */
@@ -802,6 +809,7 @@ static void SetSysClockTo96_HSI(void) {
     }
 }
 
+
 #elif defined SYSCLK_FREQ_120MHz_HSI
 
 /*********************************************************************
@@ -811,7 +819,7 @@ static void SetSysClockTo96_HSI(void) {
  *
  * @return  none
  */
-static void SetSysClockTo120_HSI(void) {
+static void SetSysClockTo120_HSI (void) {
     EXTEN->EXTEN_CTR |= EXTEN_PLL_HSI_PRE;
 
     /* HCLK = SYSCLK */
@@ -848,7 +856,7 @@ static void SetSysClockTo120_HSI(void) {
  *
  * @return  none
  */
-static void SetSysClockTo144_HSI(void) {
+static void SetSysClockTo144_HSI (void) {
     EXTEN->EXTEN_CTR |= EXTEN_PLL_HSI_PRE;
 
     /* HCLK = SYSCLK */
@@ -875,5 +883,6 @@ static void SetSysClockTo144_HSI(void) {
     while ((RCC->CFGR0 & (uint32_t)RCC_SWS) != (uint32_t)0x08) {
     }
 }
+
 
 #endif

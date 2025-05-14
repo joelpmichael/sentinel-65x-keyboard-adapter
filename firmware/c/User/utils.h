@@ -15,6 +15,7 @@
 
 void *memset32(void *, uint32_t, size_t);
 void *memcpy32(void *, const void *, size_t);
+void __EBREAK(void);
 
 inline int32_t MAX(int32_t a, int32_t b) { return ((a) > (b) ? a : b); }
 inline int32_t MIN(int32_t a, int32_t b) { return ((a) < (b) ? a : b); }
